@@ -1,0 +1,104 @@
+html,body {
+	height:98.5%;
+}
+
+.bodyTag {
+	
+	background-color:rgb(245,245,245);
+	padding:0em;
+	margin:0em;
+	padding:0em;
+	background-repeat:no-repeat;
+	background-position:top;
+}
+
+.title, .desc {
+	text-align: center;
+	color:rgb(25,25,25);
+	padding:0em;
+	margin-top:.5em;
+	margin-bottom:0em;
+	font-weight:bold;
+}
+
+.desc {
+	font-size:.7em;
+}
+
+.btn {
+    	margin-left: auto;
+    	margin-right: auto;	
+	margin-top:0.4em;
+	text-align: center;
+}
+
+.output {
+	margin-top:5em;
+	display: block;
+    	margin-left: auto;
+    	margin-right: auto;
+	width:50%;
+	font-size:1.0em;
+	font-weight:bold;
+	font-style:normal;
+	font-family: Courier New, monospace;
+}
+
+.stringMark {
+	width:400px;
+	color:rgb(0,0,0);
+	border:4px solid rgb(0,0,0);
+	text-align: left;
+	padding-left:0.5em;
+}
+
+.languageMark {
+	color:green;
+	font-size:1.3em;
+	border:4px solid green;
+}
+
+.errorDiv {
+	color:red;
+	text-align: center;
+	width:100%;
+	height:1em;
+	font-weight:bold;
+	margin: 0.5em 0 0.5em 0em;
+}
+
+.container {
+    position: relative;
+    min-height: 100%;
+}
+
+.inputCounter {
+	font-weight:bold;
+}
+
+.footer{
+	text-align:center;
+	position: absolute;
+    	bottom: 0;
+	width:100%;
+	margin-top:5em;
+}
+
+.detectedLanguage{
+	padding:4em;
+	text-align: center;
+}
+
+.detectedLanguage span {
+	color:green;
+	font-size:1.5em;
+	border:4px solid green;
+	font-weight:bold;
+	font-style:normal;
+	font-family: Courier New, monospace;
+
+	
+}
+
+
+

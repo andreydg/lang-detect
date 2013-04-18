@@ -1,0 +1,11 @@
+#!/bin/sh
+
+DATA_PATH=
+
+java -server -mx2000m -cp classes \
+  language.tools.LanguageDetectorTester \
+  -dataPath $DATA_PATH \
+  -runTestSet \
+  -useClassifier 1 \
+  -verbose \
+  $@

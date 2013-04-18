@@ -1,0 +1,8 @@
+#!/bin/sh
+
+DATA_PATH=
+
+java -server -mx500m -cp classes \
+  language.tools.LanguageDetectorTester \
+  -dataPath $DATA_PATH \
+  -testString $@ \

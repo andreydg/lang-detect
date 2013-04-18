@@ -1,0 +1,12 @@
+#!/bin/sh
+
+DATA_PATH=
+
+java -server -mx2000m -cp classes \
+  language.tools.LanguageDetectorTester \
+  -dataPath $DATA_PATH \
+  -runMultiTestSet \
+  -useClassifier 1 \
+  -boundaryDetector FOUR_WORD_BIGRAM \
+  -verbose \
+  $@

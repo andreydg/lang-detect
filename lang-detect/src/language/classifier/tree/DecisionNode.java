@@ -126,7 +126,6 @@ public class DecisionNode<T extends Comparable<T>, K> extends DecisionTreeEntity
 	/**
 	 * @see DecisionTreeEntity
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public double predictFor(DecisionTreeExample<T, K> example) {
 

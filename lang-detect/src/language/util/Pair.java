@@ -34,8 +34,7 @@ public class Pair<A, B> {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		@SuppressWarnings("unchecked")
-		Pair other = (Pair) obj;
+		Pair<?, ?> other = (Pair<?, ?>) obj;
 		if (first == null) {
 			if (other.first != null)
 				return false;

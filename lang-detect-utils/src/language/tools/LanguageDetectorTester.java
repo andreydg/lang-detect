@@ -94,8 +94,8 @@ public class LanguageDetectorTester {
 		NgramLanguageDetectorWithUtils detector = new NgramLanguageDetectorWithUtils(baseFilePath, minTrainingSampleSize,
 				maxTrainingSampleSize);
 
-		String testString = argValues.get(TEST_STRING_PARAM);
-		if (testString != null) {
+		String testString = null;
+		if (argValues.containsKey(TEST_STRING_PARAM)) {
 			System.out.print("Enter your test string: ");
 			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 			try {
@@ -106,9 +106,9 @@ public class LanguageDetectorTester {
 			}
 		}
 
-		String testMultiString = argValues.get(TEST_MULTI_STRING_PARAM);
-		if (testMultiString != null) {
-			while (testMultiString != null && testMultiString.length() > 0) {
+		String testMultiString = null;
+		if (argValues.containsKey(TEST_MULTI_STRING_PARAM)) {
+			 do {
 				System.out.print("\nEnter your test multi language string(no string to exit): ");
 				BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 				try {
@@ -128,7 +128,7 @@ public class LanguageDetectorTester {
 						System.out.println(pair.getFirst() + " -> " + pair.getSecond());
 					}
 				}
-			}
+			} while (testMultiString != null && testMultiString.length() > 0);
 		}
 
 		// generate models from source text

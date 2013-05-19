@@ -1,8 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 
-DATA_PATH=
+DATA_PATH=../lang-detect/war/
 
-java -server -mx500m -cp classes \
-  language.tools.LanguageDetectorTester \
-  -dataPath $DATA_PATH \
-  -testMultiString $@ \
+java -server -mx500m -cp bin:../lang-detect/war/WEB-INF/classes \
+	language.tools.LanguageDetectorTester \
+	-dataPath $DATA_PATH \
+	-testMultiString

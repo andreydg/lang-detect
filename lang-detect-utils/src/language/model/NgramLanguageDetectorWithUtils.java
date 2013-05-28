@@ -8,7 +8,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,7 +34,6 @@ import language.util.Pair;
  */
 public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 
-
 	private static final String SOURCE_DIR = "modelSource";
 	private static final String MULTI_LANG_TEST_DIR = "multiLangTestSet";
 
@@ -44,7 +42,6 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 
 	private final int minTrainingSampleLength;
 	private final int maxTrainingSampleLength;
-
 
 	public NgramLanguageDetectorWithUtils(File basePath, int minTrainingSampleLength, int maxTrainingSampleLength) {
 		super(basePath);
@@ -55,39 +52,33 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 	public String generateLanguageModels() throws IOException {
 		StringBuilder output = new StringBuilder(256);
 
-		String locationBase = basePath.getAbsolutePath() + File.separator
-				+ "languagemodels" + File.separator;
+		String locationBase = basePath.getAbsolutePath() + File.separator + "languagemodels" + File.separator;
 		for (int nGramSize : ngramSet) {
 
 			// go through all languages and generate ngram models
 			for (Locale locale : locales) {
 
-				String outLog = "\n\n******** Creating " + nGramSize
-						+ "-gram model for " + locale.toString()
+				String outLog = "\n\n******** Creating " + nGramSize + "-gram model for " + locale.toString()
 						+ " ********\n";
 				System.out.println(outLog);
 				output.append(outLog);
 
-				String sourceLocation = locationBase + SOURCE_DIR
-						+ File.separator + locale.toString();
+				String sourceLocation = locationBase + SOURCE_DIR + File.separator + locale.toString();
 
 				File fileWithText = new File(sourceLocation);
 				if (!fileWithText.exists()) {
-					output.append("+++++ Skipping generating ngram model for ")
-							.append(locale.toString());
+					output.append("+++++ Skipping generating ngram model for ").append(locale.toString());
 					output.append(" since source file does not exist\n");
 					continue;
 				}
-				
+
 				NgramModel languageModel = new NgramModel(nGramSize);
-				FileReader fr = new FileReader(fileWithText);
-				BufferedReader br = new BufferedReader(fr);
-				String s;
-				while ((s = br.readLine()) != null) {
-					languageModel = this.getNgramModelForText(s, languageModel, false);
+				try (BufferedReader br = new BufferedReader(new FileReader(fileWithText))) {
+					String s;
+					while ((s = br.readLine()) != null) {
+						languageModel = this.getNgramModelForText(s, languageModel, false);
+					}
 				}
-				fr.close();
-				br.close();
 
 				// get the model
 				String ngramModel = languageModel.toString();
@@ -100,9 +91,9 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 
 				String modelLocation = modelLocationDir + locale.toString() + "_" + nGramSize;
 
-				BufferedWriter out = new BufferedWriter(new FileWriter(modelLocation));
-				out.write(ngramModel);
-				out.close();
+				try (BufferedWriter out = new BufferedWriter(new FileWriter(modelLocation))) {
+					out.write(ngramModel);
+				}
 			}
 		}
 
@@ -129,35 +120,35 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 				continue;
 			}
 
-			FileReader fr = new FileReader(fileWithText);
-			BufferedReader br = new BufferedReader(fr);
-			String s;
-			List<String> trainingSet = new ArrayList<String>();
-			List<String> testSet = new ArrayList<String>();
-			StringBuilder sb = new StringBuilder(128);
-			int randomLength = generateRandomSampleLength();
-			while ((s = br.readLine()) != null) {
-				for (String word : LanguageUtil.tokenize(s, 1)) {
-					randomLength--;
-					if (randomLength < 0) {
-						// add 90% of examples to training set and 10% to test
-						// set
-						if (Math.random() > .1) {
-							trainingSet.add(sb.toString().trim());
+			List<String> trainingSet = new ArrayList<>();
+			List<String> testSet = new ArrayList<>();
+			try (BufferedReader br = new BufferedReader(new FileReader(fileWithText))) {
+
+				String s;
+				StringBuilder sb = new StringBuilder(128);
+				int randomLength = generateRandomSampleLength();
+				while ((s = br.readLine()) != null) {
+					for (String word : LanguageUtil.tokenize(s, 1)) {
+						randomLength--;
+						if (randomLength < 0) {
+							// add 90% of examples to training set and 10% to
+							// test set
+							if (Math.random() > .1) {
+								trainingSet.add(sb.toString().trim());
+							} else {
+								testSet.add(sb.toString().trim());
+							}
+							// new random length
+							randomLength = generateRandomSampleLength();
+							sb.delete(0, sb.length() - 1);
 						} else {
-							testSet.add(sb.toString().trim());
+							sb.append(word).append(" ");
 						}
-						// new random length
-						randomLength = generateRandomSampleLength();
-						sb.delete(0, sb.length() - 1);
-					} else {
-						sb.append(word).append(" ");
 					}
 				}
+
+				testSet.add(sb.toString().trim());
 			}
-			testSet.add(sb.toString().trim());
-			fr.close();
-			br.close();
 
 			// write test set and training set
 			String trainingTestSetLocation = locationBase + TRAINING_TEST_DIR + File.separator;
@@ -166,19 +157,19 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 				trainingTestSetLocationFile.mkdir();
 			}
 
-			BufferedWriter outForTraining = new BufferedWriter(new FileWriter(trainingTestSetLocation
-					+ locale.toString() + "_training"));
-			for (String training : trainingSet) {
-				outForTraining.write(training + "\n");
+			try (BufferedWriter outForTraining = new BufferedWriter(new FileWriter(trainingTestSetLocation
+					+ locale.toString() + "_training"));) {
+				for (String training : trainingSet) {
+					outForTraining.write(training + "\n");
+				}
 			}
-			outForTraining.close();
 
-			BufferedWriter outForTesting = new BufferedWriter(new FileWriter(trainingTestSetLocation
-					+ locale.toString() + "_test"));
-			for (String test : testSet) {
-				outForTesting.write(test + "\n");
+			try (BufferedWriter outForTesting = new BufferedWriter(new FileWriter(trainingTestSetLocation
+					+ locale.toString() + "_test"));) {
+				for (String test : testSet) {
+					outForTesting.write(test + "\n");
+				}
 			}
-			outForTesting.close();
 		}
 
 		return output.toString();
@@ -205,9 +196,7 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 				continue;
 			}
 
-			FileReader fr = new FileReader(fileWithText);
-			BufferedReader br = new BufferedReader(fr);
-			sourceFiles[ind] = br;
+			sourceFiles[ind] = new BufferedReader(new FileReader(fileWithText));
 		}
 
 		output.append("\n\n******** Creating multilingual test set from existing test sets ********\n");
@@ -219,30 +208,30 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 			trainingTestSetLocationFile.mkdir();
 		}
 
-		BufferedWriter outForTest = new BufferedWriter(new FileWriter(multilingTestSetLocation + "testSet"));
-		// total of MAX_MULTILNGUAL_PHRASES phrase in different languages
-		// their length will be identical to length of phrases generated in
-		// original test set files
-		for (int ind = 0; ind < MAX_MULTI_LING_PHRASES; ind++) {
-			String line = null;
-			// get a line and write to test file
-			while (line == null) {
-				int random = (int) (Math.random() * sourceFiles.length);
-				Locale locale = locales[random];
-				BufferedReader br = sourceFiles[random];
-				line = br != null ? br.readLine() : null;
-				if (line != null) {
-					outForTest.write(line + MULTI_LING_SEPARATOR + locale.toString() + "\n");
+		try (BufferedWriter outForTest = new BufferedWriter(new FileWriter(multilingTestSetLocation + "testSet"));) {
+			// total of MAX_MULTILNGUAL_PHRASES phrase in different languages
+			// their length will be identical to length of phrases generated in
+			// original test set files
+			for (int ind = 0; ind < MAX_MULTI_LING_PHRASES; ind++) {
+				String line = null;
+				// get a line and write to test file
+				while (line == null) {
+					int random = (int) (Math.random() * sourceFiles.length);
+					Locale locale = locales[random];
+					BufferedReader br = sourceFiles[random];
+					line = br != null ? br.readLine() : null;
+					if (line != null) {
+						outForTest.write(line + MULTI_LING_SEPARATOR + locale.toString() + "\n");
+					}
 				}
 			}
-		}
-		outForTest.close();
-
-		// close all the readers
-		for (int ind = 0; ind < sourceFiles.length; ind++) {
-			BufferedReader br = sourceFiles[ind];
-			if (br != null) {
-				br.close();
+		} finally {
+			// close all the readers
+			for (int ind = 0; ind < sourceFiles.length; ind++) {
+				BufferedReader br = sourceFiles[ind];
+				if (br != null) {
+					br.close();
+				}
 			}
 		}
 
@@ -259,8 +248,8 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 		StringBuilder output = new StringBuilder(512);
 
 		String locationBase = basePath.getAbsolutePath() + File.separator + "languagemodels" + File.separator;
-		Map<Locale, Integer> localeErrorCount = new HashMap<Locale, Integer>(locales.length * 2);
-		Map<Locale, Integer> localeTotalCount = new HashMap<Locale, Integer>(locales.length * 2);
+		Map<Locale, Integer> localeErrorCount = new HashMap<>(locales.length * 2);
+		Map<Locale, Integer> localeTotalCount = new HashMap<>(locales.length * 2);
 		int totalCount = 0;
 		int totalErrorCount = 0;
 		for (Locale locale : locales) {
@@ -272,11 +261,10 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 			if (!file.exists()) {
 				continue;
 			}
-			Reader fr = new InputStreamReader(new FileInputStream(file), UTF_ENCODING);
-			BufferedReader br = new BufferedReader(fr);
+
 			String s;
 
-			try {
+			try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), UTF_ENCODING));) {
 				while ((s = br.readLine()) != null) {
 					incrementLocaleCounts(locale, localeTotalCount);
 					Locale detectedLanguage = getMostLikelyLanguage(s, algorithmToUse);
@@ -284,10 +272,6 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 						incrementLocaleCounts(locale, localeErrorCount);
 					}
 				}
-			} finally {
-
-				fr.close();
-				br.close();
 			}
 
 			if (localeTotalCount.get(locale) != null && localeTotalCount.get(locale) > 0) {
@@ -297,20 +281,22 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 					errorCount = 0;
 				}
 				totalErrorCount += errorCount;
-				output.append("Correct rate for ").append(locale.toString()).append(": ").append(
-						decimalFormat.format(((double) (localeTotalCount.get(locale) - errorCount))
+				output.append("Correct rate for ")
+						.append(locale.toString())
+						.append(": ")
+						.append(decimalFormat.format(((double) (localeTotalCount.get(locale) - errorCount))
 								/ localeTotalCount.get(locale))).append(" (").append(localeTotalCount.get(locale))
 						.append(")\n");
 			}
 
-//			System.out.println(output.toString());
-			
+			// System.out.println(output.toString());
+
 		}
 
 		if (totalCount > 0) {
-			output.append("Total rate:").append(
-					decimalFormat.format(((double) (totalCount - totalErrorCount)) / totalCount)).append(
-					", total test set size:").append(totalCount).append("\n");
+			output.append("Total rate:")
+					.append(decimalFormat.format(((double) (totalCount - totalErrorCount)) / totalCount))
+					.append(", total test set size:").append(totalCount).append("\n");
 
 		}
 
@@ -331,19 +317,17 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 			return output.toString();
 		}
 
-		Map<Locale, Integer> localeErrorCount = new HashMap<Locale, Integer>(locales.length * 2);
-		Map<Locale, Integer> localeTotalCount = new HashMap<Locale, Integer>(locales.length * 2);
+		Map<Locale, Integer> localeErrorCount = new HashMap<>(locales.length * 2);
+		Map<Locale, Integer> localeTotalCount = new HashMap<>(locales.length * 2);
 
-		Map<String, Locale> allLanguageStrings = new HashMap<String, Locale>();
+		Map<String, Locale> allLanguageStrings = new HashMap<>();
 
-		FileReader fr = new FileReader(fileWithText);
-		BufferedReader br = new BufferedReader(fr);
 		String s;
 		// this will accumulate entire document and
 		StringBuilder entireDocument = new StringBuilder();
 		int numDuplicates = 0;
 		StringBuilder actualLanguageTags = new StringBuilder();
-		try {
+		try (BufferedReader br = new BufferedReader(new FileReader(fileWithText))) {
 			Locale prevLocale = null;
 			StringBuilder prevString = new StringBuilder();
 			while ((s = br.readLine()) != null) {
@@ -381,9 +365,6 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 				actualLanguageTags.append(stringToAdd).append(MULTI_LING_SEPARATOR);
 				actualLanguageTags.append(prevLocale).append("\n");
 			}
-		} finally {
-			fr.close();
-			br.close();
 		}
 
 		int totalCount = 0;
@@ -397,17 +378,19 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 					errorCount = 0;
 				}
 				totalErrorCount += errorCount;
-				output.append("Base correct rate for ").append(locale.toString()).append(": ").append(
-						decimalFormat.format(((double) (localeTotalCount.get(locale) - errorCount))
+				output.append("Base correct rate for ")
+						.append(locale.toString())
+						.append(": ")
+						.append(decimalFormat.format(((double) (localeTotalCount.get(locale) - errorCount))
 								/ localeTotalCount.get(locale))).append(" (").append(localeTotalCount.get(locale))
 						.append(")\n");
 			}
 		}
 
 		if (totalCount > 0) {
-			output.append("Base total rate:").append(
-					decimalFormat.format(((double) (totalCount - totalErrorCount)) / totalCount)).append(
-					", total test set size:").append(totalCount).append("\n");
+			output.append("Base total rate:")
+					.append(decimalFormat.format(((double) (totalCount - totalErrorCount)) / totalCount))
+					.append(", total test set size:").append(totalCount).append("\n");
 
 		}
 
@@ -470,15 +453,15 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 
 		// write the results of the run for analysis
 		String multilingOutput = locationBase + MULTI_LANG_TEST_DIR + File.separator + "runOutput";
-		BufferedWriter out = new BufferedWriter(new FileWriter(multilingOutput));
-		out.write(runOutput.toString());
-		out.close();
+		try (BufferedWriter out = new BufferedWriter(new FileWriter(multilingOutput));) {
+			out.write(runOutput.toString());
+		}
 
 		// write the results of the run for analysis
 		String multilingExactSet = locationBase + MULTI_LANG_TEST_DIR + File.separator + "exactSetOutput";
-		out = new BufferedWriter(new FileWriter(multilingExactSet));
-		out.write(actualLanguageTags.toString());
-		out.close();
+		try (BufferedWriter out = new BufferedWriter(new FileWriter(multilingExactSet));) {
+			out.write(actualLanguageTags.toString());
+		}
 
 		output.append("\n---------- Boundary detection results----------\n");
 		output.append("\nNumber of phrases found:").append(languageTags.size()).append("\n");

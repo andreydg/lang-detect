@@ -30,7 +30,7 @@ public class NgramModel {
 	// not null when NgramModel represents specific language
 	private Locale languageDefinition;
 
-	public final Map<String, Set<String>> nGramCache = new HashMap<String, Set<String>>();
+	public final Map<String, Set<String>> nGramCache = new HashMap<>();
 
 	private final int ngramSize;
 
@@ -45,7 +45,7 @@ public class NgramModel {
 	}
 
 	public NgramModel(Locale languageDefinition, int ngramSize) {
-		this.rawNgramFrequency = new HashMap<String, Double>(64);
+		this.rawNgramFrequency = new HashMap<>(64);
 		this.languageDefinition = languageDefinition;
 		// if this is already normalized vector we don't have to compute length
 		// norm again
@@ -123,7 +123,7 @@ public class NgramModel {
 
 		if (this.sortedNgrams == null) {
 			// used tree map to keep NGram sorted according to frequency
-			this.sortedNgrams = new TreeMap<NGram, Double>();
+			this.sortedNgrams = new TreeMap<>();
 		}
 
 		this.sortedNgrams.put(new NGram(nGram, value), value);
@@ -132,7 +132,7 @@ public class NgramModel {
 	private Map<NGram, Double> getNgramsSortedByFrequency() {
 		if (this.sortedNgrams == null) {
 			// used tree map to keep NGram sorted according to frequency
-			this.sortedNgrams = new TreeMap<NGram, Double>();
+			this.sortedNgrams = new TreeMap<>();
 
 			for (Map.Entry<String, Double> entry : this.rawNgramFrequency.entrySet()) {
 				this.sortedNgrams.put(new NGram(entry.getKey(), entry.getValue()), entry.getValue());

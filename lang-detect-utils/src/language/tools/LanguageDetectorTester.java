@@ -91,14 +91,14 @@ public class LanguageDetectorTester {
 		File baseFilePath = new File(basePath);
 		assert (baseFilePath.exists());
 
-		NgramLanguageDetectorWithUtils detector = new NgramLanguageDetectorWithUtils(baseFilePath, minTrainingSampleSize,
-				maxTrainingSampleSize);
+		NgramLanguageDetectorWithUtils detector = new NgramLanguageDetectorWithUtils(baseFilePath,
+				minTrainingSampleSize, maxTrainingSampleSize);
 
 		String testString = null;
 		if (argValues.containsKey(TEST_STRING_PARAM)) {
 			System.out.print("Enter your test string: ");
-			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-			try {
+
+			try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
 				testString = br.readLine();
 			} catch (IOException ioe) {
 				System.out.println("IO error trying to read your string!");
@@ -108,10 +108,10 @@ public class LanguageDetectorTester {
 
 		String testMultiString = null;
 		if (argValues.containsKey(TEST_MULTI_STRING_PARAM)) {
-			 do {
+			do {
 				System.out.print("\nEnter your test multi language string(no string to exit): ");
-				BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-				try {
+
+				try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
 					testMultiString = br.readLine();
 				} catch (IOException ioe) {
 					System.out.println("IO error trying to read your string!");
@@ -200,7 +200,7 @@ public class LanguageDetectorTester {
 		// detect the most likely language for given string
 		if (testString != null && testString.length() > 0) {
 
-			List<Map<Locale, Double>> listOfNGramResults = new ArrayList<Map<Locale, Double>>();
+			List<Map<Locale, Double>> listOfNGramResults = new ArrayList<>();
 			for (int nGram : detector.getNgramSet()) {
 				Map<Locale, Double> cosineSimilarity = detector.getRawCosineSimilarities(testString, nGram, true);
 				listOfNGramResults.add(cosineSimilarity);
@@ -239,7 +239,7 @@ public class LanguageDetectorTester {
 	 * @author Dan Klein
 	 */
 	private static Map<String, String> simpleCommandLineParser(String[] args) {
-		Map<String, String> map = new HashMap<String, String>();
+		Map<String, String> map = new HashMap<>();
 		for (int i = 0; i <= args.length; i++) {
 			String key = (i > 0 ? args[i - 1] : null);
 			String value = (i < args.length ? args[i] : null);

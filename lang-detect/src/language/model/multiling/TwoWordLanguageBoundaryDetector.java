@@ -31,7 +31,7 @@ public class TwoWordLanguageBoundaryDetector implements LanguageBoundaryDetector
 
 	public List<Pair<String, Locale>> tagStringWithLanguages(String s) throws IOException {
 
-		List<Pair<String, Locale>> retVal = new ArrayList<Pair<String, Locale>>();
+		List<Pair<String, Locale>> retVal = new ArrayList<>();
 		StringTokenizer st = new StringTokenizer(s);
 		StringBuilder currentString = new StringBuilder();
 		Locale prevLocale = null;
@@ -50,7 +50,7 @@ public class TwoWordLanguageBoundaryDetector implements LanguageBoundaryDetector
 
 			Locale locale = detector.getMostLikelyLanguage(slidingWindow.toString().trim(), algorithmToUse);
 			if (!(locale == null || prevLocale == null || locale.equals(prevLocale))) {
-				retVal.add(new Pair<String, Locale>(currentString.toString().trim(), prevLocale));
+				retVal.add(new Pair<>(currentString.toString().trim(), prevLocale));
 				currentString.delete(0, currentString.length());
 			}
 			prevLocale = locale;
@@ -62,7 +62,7 @@ public class TwoWordLanguageBoundaryDetector implements LanguageBoundaryDetector
 		}
 
 		if (currentString.length() > 0) {
-			retVal.add(new Pair<String, Locale>(currentString.toString().trim(), prevLocale));
+			retVal.add(new Pair<>(currentString.toString().trim(), prevLocale));
 		}
 
 		return retVal;

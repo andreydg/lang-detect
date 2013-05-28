@@ -48,7 +48,7 @@ public class DecisionNode<T extends Comparable<T>, K> extends DecisionTreeEntity
 		this.numPositives = this.getNumberOfPositives(this.allData);
 		this.numNegatives = this.allData.size() - this.numPositives;
 		this.entropyAtNode = this.getEntropyForData(this.allData);
-		this.children = new ArrayList<DecisionTreeEntity<T, K>>();
+		this.children = new ArrayList<>();
 		this.label = lowValue + " <= " + currentFeature + " <" + highValue;
 		this.currentFeature = currentFeature;
 		this.lowValue = lowValue;
@@ -96,8 +96,8 @@ public class DecisionNode<T extends Comparable<T>, K> extends DecisionTreeEntity
 			ArrayList<DecisionTreeExample<T, K>> hasValue = this.getSubsetWithFeatureValue(maxFeature, range.lowBound,
 					range.highBound);
 			if (hasValue != null && hasValue.size() > 0) {
-				children.add(new DecisionNode<T, K>(hasValue, newFeautureSet, this.level - 1, maxFeature,
-						range.lowBound, range.highBound, this.positiveLabel));
+				children.add(new DecisionNode<>(hasValue, newFeautureSet, this.level - 1, maxFeature, range.lowBound,
+						range.highBound, this.positiveLabel));
 			}
 		}
 	}
@@ -114,7 +114,7 @@ public class DecisionNode<T extends Comparable<T>, K> extends DecisionTreeEntity
 			return;
 		}
 		// construct tree node at this place
-		this.children.add(new DecisionLeaf<T, K>(allData, ((double) this.numPositives)
+		this.children.add(new DecisionLeaf<>(allData, ((double) this.numPositives)
 				/ (this.numPositives + this.numNegatives), this.positiveLabel));
 	}
 
@@ -251,7 +251,7 @@ public class DecisionNode<T extends Comparable<T>, K> extends DecisionTreeEntity
 	private ArrayList<DecisionTreeExample<T, K>> getSubsetWithFeatureValue(DecisionTreeFeature<T> feature,
 			Comparable<T> lowValue, Comparable<T> highValue) {
 
-		ArrayList<DecisionTreeExample<T, K>> hasValue = new ArrayList<DecisionTreeExample<T, K>>();
+		ArrayList<DecisionTreeExample<T, K>> hasValue = new ArrayList<>();
 		for (DecisionTreeExample<T, K> example : this.allData) {
 			if (example.hasValueForFeature(feature, lowValue, highValue, this.positiveLabel)) {
 				hasValue.add(example);

@@ -10,8 +10,7 @@ import language.classifier.tree.DecisionTreeExample;
 import language.classifier.tree.DecisionTreeFeature;
 
 /**
- * Implements machine learning BaggedDecisionTree classifier algorithm. This is
- * language detection research related class. Enjoy!
+ * Implements machine learning BaggedDecisionTree classifier algorithm. 
  * 
  * @author Andrey Gusev
  */
@@ -28,7 +27,7 @@ public class BaggedDecisionTreeClassifier<T extends Comparable<T>, K, Z extends 
 		this.positiveLabel = positiveLabel;
 		this.numBags = numBags;
 		this.features = features;
-		this.decisionTrees = new ArrayList<DecisionNode<T, K>>(this.numBags);
+		this.decisionTrees = new ArrayList<>(this.numBags);
 	}
 
 	/**
@@ -40,8 +39,8 @@ public class BaggedDecisionTreeClassifier<T extends Comparable<T>, K, Z extends 
 
 		for (int ind = 0; ind < this.numBags; ind++) {
 			// train decision tree
-			DecisionNode<T, K> root = new DecisionNode<T, K>(getRandomBagOfTrainingSet(trainingSet), features, -1,
-					null, null, null, positiveLabel);
+			DecisionNode<T, K> root = new DecisionNode<>(getRandomBagOfTrainingSet(trainingSet), features, -1, null,
+					null, null, positiveLabel);
 			// add tree to list of bagged trees
 			this.decisionTrees.add(root);
 
@@ -57,7 +56,7 @@ public class BaggedDecisionTreeClassifier<T extends Comparable<T>, K, Z extends 
 	 * @return
 	 */
 	private List<DecisionTreeExample<T, K>> getRandomBagOfTrainingSet(List<Z> trainingSet) {
-		List<DecisionTreeExample<T, K>> retVal = new ArrayList<DecisionTreeExample<T, K>>(trainingSet.size());
+		List<DecisionTreeExample<T, K>> retVal = new ArrayList<>(trainingSet.size());
 		for (int ind = 0; ind < trainingSet.size(); ind++) {
 			int index = (int) (Math.random() * trainingSet.size());
 			retVal.add(trainingSet.get(index));

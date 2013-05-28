@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +44,7 @@ public class BaseBigramLanguageBoundaryDetector implements LanguageBoundaryDetec
 
 	private Map<String, Integer> getBigramCounts() throws IOException {
 
-		Map<String, Integer> retVal = new HashMap<String, Integer>();
+		Map<String, Integer> retVal = new HashMap<>();
 
 		String locationBase = this.detector.getBasePath().getAbsolutePath() + File.separator + "languagemodels"
 				+ File.separator;
@@ -60,11 +59,10 @@ public class BaseBigramLanguageBoundaryDetector implements LanguageBoundaryDetec
 			if (!file.exists()) {
 				continue;
 			}
-			Reader fr = new InputStreamReader(new FileInputStream(file), NgramLanguageDetector.UTF_ENCODING);
-			BufferedReader br = new BufferedReader(fr);
-			String s;
 
-			try {
+			String s;
+			try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file),
+					NgramLanguageDetector.UTF_ENCODING))) {
 				while ((s = br.readLine()) != null) {
 					StringTokenizer st = new StringTokenizer(s);
 					String prevToken = null;
@@ -82,10 +80,6 @@ public class BaseBigramLanguageBoundaryDetector implements LanguageBoundaryDetec
 						prevToken = currentToken;
 					}
 				}
-			} finally {
-
-				fr.close();
-				br.close();
 			}
 		}
 
@@ -94,7 +88,7 @@ public class BaseBigramLanguageBoundaryDetector implements LanguageBoundaryDetec
 
 	public List<Pair<String, Locale>> tagStringWithLanguages(String s) throws IOException {
 
-		List<Pair<String, Locale>> retVal = new ArrayList<Pair<String, Locale>>();
+		List<Pair<String, Locale>> retVal = new ArrayList<>();
 		StringTokenizer st = new StringTokenizer(s);
 		StringBuilder currentString = new StringBuilder();
 		String prevToken = null;
@@ -114,14 +108,12 @@ public class BaseBigramLanguageBoundaryDetector implements LanguageBoundaryDetec
 			int count = getBigramCount(slidingWindow.toString().trim());
 			if (count == 0) {
 				String stringToAdd = currentString.toString().trim();
-				Pair<String, Locale> thisPair = new Pair<String, Locale>(stringToAdd, this
-						.getLanguageWithDefault(stringToAdd));
+				Pair<String, Locale> thisPair = new Pair<>(stringToAdd, this.getLanguageWithDefault(stringToAdd));
 				// if the languages are the same we can collapse it into one
 				// language
 				if (previousPair != null && previousPair.getSecond().equals(thisPair.getSecond())) {
 					retVal.remove(retVal.size() - 1);
-					previousPair = new Pair<String, Locale>(previousPair.getFirst() + " " + stringToAdd, previousPair
-							.getSecond());
+					previousPair = new Pair<>(previousPair.getFirst() + " " + stringToAdd, previousPair.getSecond());
 					retVal.add(previousPair);
 
 				} else {
@@ -139,13 +131,12 @@ public class BaseBigramLanguageBoundaryDetector implements LanguageBoundaryDetec
 		if (currentString.length() > 0 || slidingWindow.length() > 0) {
 			String stringToAdd = currentString.toString().trim() + " " + slidingWindow.toString().trim();
 			stringToAdd = stringToAdd.trim();
-			Pair<String, Locale> thisPair = new Pair<String, Locale>(stringToAdd, this
-					.getLanguageWithDefault(stringToAdd));
+			Pair<String, Locale> thisPair = new Pair<>(stringToAdd, this.getLanguageWithDefault(stringToAdd));
 			// if the languages are the same we can collapse it into one
 			// language
 			if (previousPair.getSecond().equals(thisPair.getSecond())) {
 				retVal.remove(retVal.size() - 1);
-				retVal.add(new Pair<String, Locale>(previousPair.getFirst() + " " + stringToAdd, previousPair
+				retVal.add(new Pair<>(previousPair.getFirst() + " " + stringToAdd, previousPair
 						.getSecond()));
 			} else {
 				retVal.add(thisPair);

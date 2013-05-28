@@ -47,7 +47,7 @@ public class SlidingWindowWithBigramLanguageBoundaryDetector extends BaseBigramL
 
 	@Override
 	public List<Pair<String, Locale>> tagStringWithLanguages(String s) throws IOException {
-		List<Pair<String, Locale>> retVal = new ArrayList<Pair<String, Locale>>();
+		List<Pair<String, Locale>> retVal = new ArrayList<>();
 
 		StringTokenizer st = new StringTokenizer(s);
 		StringBuilder currentString = new StringBuilder();
@@ -107,14 +107,12 @@ public class SlidingWindowWithBigramLanguageBoundaryDetector extends BaseBigramL
 					}
 
 					String stringToAdd = currentString.toString().trim();
-					Pair<String, Locale> thisPair = new Pair<String, Locale>(stringToAdd, this
-							.getLanguageWithDefault(stringToAdd));
+					Pair<String, Locale> thisPair = new Pair<>(stringToAdd, this.getLanguageWithDefault(stringToAdd));
 					// if the languages are the same we can collapse it into one
 					// language
 					if (previousPair != null && previousPair.getSecond().equals(thisPair.getSecond())) {
 						retVal.remove(retVal.size() - 1);
-						previousPair = new Pair<String, Locale>(previousPair.getFirst() + " " + stringToAdd,
-								previousPair.getSecond());
+						previousPair = new Pair<>(previousPair.getFirst() + " " + stringToAdd, previousPair.getSecond());
 						retVal.add(previousPair);
 					} else {
 						retVal.add(thisPair);
@@ -139,14 +137,12 @@ public class SlidingWindowWithBigramLanguageBoundaryDetector extends BaseBigramL
 		if (currentString.length() > 0 || slidingWindow.length() > 0) {
 			String stringToAdd = currentString.toString().trim() + " " + slidingWindow.toString().trim();
 			stringToAdd = stringToAdd.trim();
-			Pair<String, Locale> thisPair = new Pair<String, Locale>(stringToAdd, this
-					.getLanguageWithDefault(stringToAdd));
+			Pair<String, Locale> thisPair = new Pair<>(stringToAdd, this.getLanguageWithDefault(stringToAdd));
 			// if the languages are the same we can collapse it into one
 			// language
 			if (previousPair != null && previousPair.getSecond().equals(thisPair.getSecond())) {
 				retVal.remove(retVal.size() - 1);
-				previousPair = new Pair<String, Locale>(previousPair.getFirst() + " " + stringToAdd, previousPair
-						.getSecond());
+				previousPair = new Pair<>(previousPair.getFirst() + " " + stringToAdd, previousPair.getSecond());
 				retVal.add(previousPair);
 			} else {
 				retVal.add(thisPair);

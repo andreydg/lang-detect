@@ -20,8 +20,8 @@ public enum NgramLanguageModelFeature implements DecisionTreeFeature<Double> {
 
 	private final int nGramSize;
 	private final boolean nonStandard;
-	private static final List<Double> possibleValues = new ArrayList<Double>();
-	private static final List<Range<Double>> ranges = new ArrayList<Range<Double>>();
+	private static final List<Double> possibleValues = new ArrayList<>();
+	private static final List<Range<Double>> ranges = new ArrayList<>();
 
 	private static final double RANGE_START = 0.00;
 	private static final double RANGE_INCREMENT = 0.10;
@@ -38,7 +38,7 @@ public enum NgramLanguageModelFeature implements DecisionTreeFeature<Double> {
 
 	private static Map<Integer, NgramLanguageModelFeature> enumMapping;
 	static {
-		enumMapping = new HashMap<Integer, NgramLanguageModelFeature>();
+		enumMapping = new HashMap<>();
 
 		for (NgramLanguageModelFeature feature : values()) {
 			enumMapping.put(feature.nGramSize, feature);
@@ -53,11 +53,11 @@ public enum NgramLanguageModelFeature implements DecisionTreeFeature<Double> {
 		}
 
 		// value ranges
-		ranges.add(new Range<Double>(null, possibleValues.get(0)));
+		ranges.add(new Range<>(null, possibleValues.get(0)));
 		for (int ind = 0; ind < possibleValues.size() - 1; ind++) {
-			ranges.add(new Range<Double>(possibleValues.get(ind), possibleValues.get(ind + 1)));
+			ranges.add(new Range<>(possibleValues.get(ind), possibleValues.get(ind + 1)));
 		}
-		ranges.add(new Range<Double>(possibleValues.get(possibleValues.size() - 1), null));
+		ranges.add(new Range<>(possibleValues.get(possibleValues.size() - 1), null));
 	}
 
 	public List<? extends Comparable<Double>> getPossibleValues() {

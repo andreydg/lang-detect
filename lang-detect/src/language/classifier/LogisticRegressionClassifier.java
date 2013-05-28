@@ -31,7 +31,7 @@ public class LogisticRegressionClassifier<K, Z extends ClassifierExample<Double,
 
 	public LogisticRegressionClassifier(int numFeatures, K positiveLabel) {
 		this.numFeatures = numFeatures;
-		this.featureWeights = new ArrayList<Double>(this.numFeatures);
+		this.featureWeights = new ArrayList<>(this.numFeatures);
 		this.positiveLabel = positiveLabel;
 	}
 
@@ -111,21 +111,20 @@ public class LogisticRegressionClassifier<K, Z extends ClassifierExample<Double,
 
 	public void writeToFile(File file) throws IOException {
 		// TODO: use persistent storage rather than files
-		// 
-		
-//		BufferedWriter out = new BufferedWriter(new FileWriter(file));
-//		out.write(getWeightsAsString());
-//		out.close();
+		//
+
+		// BufferedWriter out = new BufferedWriter(new FileWriter(file));
+		// out.write(getWeightsAsString());
+		// out.close();
 	}
 
 	public boolean readFromFile(File file) throws IOException {
 		if (!file.exists()) {
 			return false;
 		}
-		FileReader fr = new FileReader(file);
-		BufferedReader br = new BufferedReader(fr);
+
 		String s;
-		try {
+		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
 			while ((s = br.readLine()) != null) {
 				String[] weights = s.split(WEIGHT_DELIMETER);
 				if (weights.length != this.numFeatures) {
@@ -136,9 +135,6 @@ public class LogisticRegressionClassifier<K, Z extends ClassifierExample<Double,
 				}
 
 			}
-		} finally {
-			fr.close();
-			br.close();
 		}
 		return true;
 	}

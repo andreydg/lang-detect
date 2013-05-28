@@ -25,15 +25,15 @@ public class LanguageUtil {
 	private static final String WORD_BOUNDARY_CHAR = "$";
 
 	// allows to cache computation of ngrams
-	public static final Map<Integer, Map<String, Set<String>>> nGramCache = new HashMap<Integer, Map<String, Set<String>>>();
+	public static final Map<Integer, Map<String, Set<String>>> nGramCache = new HashMap<>();
 
 	/**
 	 * computes jaccard coefficient for two sets
 	 */
 	public static float getJaccardCoefficient(Set<String> set1, Set<String> set2) {
-		Set<String> intersection = new HashSet<String>(set1);
+		Set<String> intersection = new HashSet<>(set1);
 		intersection.retainAll(set2);
-		Set<String> union = new HashSet<String>(set1);
+		Set<String> union = new HashSet<>(set1);
 		union.addAll(set2);
 		return ((float) intersection.size()) / union.size();
 	}
@@ -56,7 +56,7 @@ public class LanguageUtil {
 	 * 
 	 */
 	public static List<String> tokenize(String text, int minLength) {
-		List<String> retVal = new LinkedList<String>();
+		List<String> retVal = new LinkedList<>();
 		StringTokenizer tokenizer = new StringTokenizer(text, delimeters);
 		while (tokenizer.hasMoreTokens()) {
 			String word = tokenizer.nextToken();
@@ -70,7 +70,7 @@ public class LanguageUtil {
 	
 	public static Set<String> getNgramsForWordCombination(String prevWord, String nextWord, int ngramSize) {
 		Set<String> initialNgrams = getNgrams(prevWord + WORD_BOUNDARY_CHAR + nextWord, ngramSize, false);
-		Set<String> retVal = new HashSet<String>(initialNgrams.size());
+		Set<String> retVal = new HashSet<>(initialNgrams.size());
 		for (String ngram : initialNgrams) {
 			// should containt word boundary character but not at first or last position
 			// otherwise we are not capturing elements from both words
@@ -96,7 +96,7 @@ public class LanguageUtil {
 	public static Set<String> getNgrams(String word, int ngramSize, boolean addWordBoundaryMarkers) {
 		Map<String, Set<String>> wordCache = nGramCache.get(ngramSize);
 		if (wordCache == null) {
-			wordCache = new HashMap<String, Set<String>>();
+			wordCache = new HashMap<>();
 			nGramCache.put(ngramSize, wordCache);
 		}
 
@@ -116,7 +116,7 @@ public class LanguageUtil {
 			return existingKGramSet;
 		}
 
-		Set<String> retSet = new HashSet<String>(word.length() + 2 - ngramSize);
+		Set<String> retSet = new HashSet<>(word.length() + 2 - ngramSize);
 		StringBuilder currentKgram = new StringBuilder();
 		int ind = 0;
 		while (ind < word.length()) {

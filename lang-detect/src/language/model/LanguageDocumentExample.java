@@ -25,7 +25,7 @@ public class LanguageDocumentExample implements DecisionTreeExample<Double, Loca
 
 	public LanguageDocumentExample(Locale exampleLocale) {
 		this.exampleLocale = exampleLocale;
-		this.featureValues = new TreeMap<NgramLanguageModelFeature, Map<Locale, Double>>();
+		this.featureValues = new TreeMap<>();
 
 	}
 
@@ -79,7 +79,7 @@ public class LanguageDocumentExample implements DecisionTreeExample<Double, Loca
 					return allFeatureValues;
 				}
 
-				List<Double> tempList = new ArrayList<Double>();
+				List<Double> tempList = new ArrayList<>();
 
 				for (Map<Locale, Double> valueMap : this.featureValues.values()) {
 					for (Double value : valueMap.values()) {

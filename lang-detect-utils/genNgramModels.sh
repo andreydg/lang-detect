@@ -2,7 +2,7 @@
 
 DATA_PATH=../lang-detect/war/
 
-java -server -mx500m -cp bin:../lang-detect/war/WEB-INF/classes \
+java -server -Xmx2G -cp bin:../lang-detect/war/WEB-INF/classes \
   language.tools.LanguageDetectorTester \
   -dataPath $DATA_PATH \
   -genModels \

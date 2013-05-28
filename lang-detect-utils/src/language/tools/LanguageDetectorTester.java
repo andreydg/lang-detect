@@ -108,27 +108,29 @@ public class LanguageDetectorTester {
 
 		String testMultiString = null;
 		if (argValues.containsKey(TEST_MULTI_STRING_PARAM)) {
-			do {
-				System.out.print("\nEnter your test multi language string(no string to exit): ");
+			try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
+				do {
+					System.out.print("\nEnter your test multi language string(no string to exit): ");
 
-				try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
 					testMultiString = br.readLine();
-				} catch (IOException ioe) {
-					System.out.println("IO error trying to read your string!");
-					System.exit(1);
-				}
 
-				if (testMultiString != null && testMultiString.length() > 0) {
-					LanguageBoundaryDetector boundaryDetector = new SlidingWindowWithBigramLanguageBoundaryDetector(
-							ClassificationAlgorithm.LINEAR_WEIGHTS, detector, 4);
+					if (testMultiString != null && testMultiString.length() > 0) {
+						LanguageBoundaryDetector boundaryDetector = new SlidingWindowWithBigramLanguageBoundaryDetector(
+								ClassificationAlgorithm.LINEAR_WEIGHTS, detector, 4);
 
-					List<Pair<String, Locale>> retVal = boundaryDetector.tagStringWithLanguages(testMultiString);
-					System.out.println("---------- Language Tagged String----------\n");
-					for (Pair<String, Locale> pair : retVal) {
-						System.out.println(pair.getFirst() + " -> " + pair.getSecond());
+						List<Pair<String, Locale>> retVal = boundaryDetector.tagStringWithLanguages(testMultiString);
+						System.out.println("---------- Language Tagged String----------\n");
+						for (Pair<String, Locale> pair : retVal) {
+							System.out.println(pair.getFirst() + " -> " + pair.getSecond());
+						}
 					}
-				}
-			} while (testMultiString != null && testMultiString.length() > 0);
+				} while (testMultiString != null && testMultiString.length() > 0);
+			} catch (IOException ioe) {
+				System.out.println("IO error trying to read your string!");
+				throw ioe;
+				// System.exit(1);
+
+			}
 		}
 
 		// generate models from source text

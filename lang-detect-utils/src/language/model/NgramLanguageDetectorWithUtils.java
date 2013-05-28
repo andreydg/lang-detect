@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 
 import language.model.multiling.BaseBigramLanguageBoundaryDetector;
 import language.model.multiling.LanguageBoundaryDetector;
@@ -33,6 +34,8 @@ import language.util.Pair;
  * @author Andrey Gusev
  */
 public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
+
+	private static final Random rnd = new Random(1);
 
 	private static final String SOURCE_DIR = "modelSource";
 	private static final String MULTI_LANG_TEST_DIR = "multiLangTestSet";
@@ -133,7 +136,7 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 						if (randomLength < 0) {
 							// add 90% of examples to training set and 10% to
 							// test set
-							if (Math.random() > .1) {
+							if (rnd.nextDouble() > .1) {
 								trainingSet.add(sb.toString().trim());
 							} else {
 								testSet.add(sb.toString().trim());
@@ -216,7 +219,7 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 				String line = null;
 				// get a line and write to test file
 				while (line == null) {
-					int random = (int) (Math.random() * sourceFiles.length);
+					int random = rnd.nextInt(sourceFiles.length);
 					Locale locale = locales[random];
 					BufferedReader br = sourceFiles[random];
 					line = br != null ? br.readLine() : null;
@@ -240,7 +243,7 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 	}
 
 	private int generateRandomSampleLength() {
-		return (int) (Math.random() * (maxTrainingSampleLength - minTrainingSampleLength) + minTrainingSampleLength);
+		return rnd.nextInt(maxTrainingSampleLength - minTrainingSampleLength) + minTrainingSampleLength;
 	}
 
 	public String runTestSet(ClassificationAlgorithm algorithmToUse) throws IOException {

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import language.classifier.tree.DecisionNode;
 import language.classifier.tree.DecisionTreeExample;
@@ -16,6 +17,8 @@ import language.classifier.tree.DecisionTreeFeature;
  */
 public class BaggedDecisionTreeClassifier<T extends Comparable<T>, K, Z extends DecisionTreeExample<T, K>> implements
 		Classifier<T, K, Z> {
+	
+	private static final Random rnd = new Random(1);
 
 	private final List<DecisionNode<T, K>> decisionTrees;
 	private final K positiveLabel;
@@ -58,7 +61,7 @@ public class BaggedDecisionTreeClassifier<T extends Comparable<T>, K, Z extends 
 	private List<DecisionTreeExample<T, K>> getRandomBagOfTrainingSet(List<Z> trainingSet) {
 		List<DecisionTreeExample<T, K>> retVal = new ArrayList<>(trainingSet.size());
 		for (int ind = 0; ind < trainingSet.size(); ind++) {
-			int index = (int) (Math.random() * trainingSet.size());
+			int index = rnd.nextInt(trainingSet.size());
 			retVal.add(trainingSet.get(index));
 		}
 		return retVal;

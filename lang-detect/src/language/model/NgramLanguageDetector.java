@@ -14,8 +14,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorCompletionService;
@@ -40,6 +41,7 @@ import language.util.Pair;
 public class NgramLanguageDetector implements LanguageDetector {
 
 	private static final Logger log = Logger.getLogger(NgramLanguageDetector.class.getName());
+	private static final Random rnd = new Random(1);
 
 	public static final String UTF_ENCODING = "UTF-8";
 
@@ -351,7 +353,7 @@ public class NgramLanguageDetector implements LanguageDetector {
 
 		// we have matching highestConfidences return random one
 		if (predictedLocale == null) {
-			return sameConfidenceLocale.get((int) (Math.random() * sameConfidenceLocale.size()));
+			return sameConfidenceLocale.get(rnd.nextInt(sameConfidenceLocale.size()));
 		}
 		return predictedLocale;
 	}

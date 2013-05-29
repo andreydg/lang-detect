@@ -62,7 +62,7 @@ public class BaseBigramLanguageBoundaryDetector implements LanguageBoundaryDetec
 
 			String s;
 			try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file),
-					NgramLanguageDetector.UTF_ENCODING))) {
+					NgramLanguageDetector.UTF8))) {
 				while ((s = br.readLine()) != null) {
 					StringTokenizer st = new StringTokenizer(s);
 					String prevToken = null;

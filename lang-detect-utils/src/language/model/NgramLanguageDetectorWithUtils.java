@@ -63,7 +63,7 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 		for (int nGramSize : ngramSet) {
 
 			// go through all languages and generate ngram models
-			for (Locale locale : locales) {
+			for (Locale locale : LOCALES) {
 
 				String outLog = "\n\n******** Creating " + nGramSize + "-gram model for " + locale.toString()
 						+ " ********\n";
@@ -107,7 +107,7 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 		StringBuilder output = new StringBuilder(512);
 
 		Path locationBase = basePath.toPath().resolve(BASE_MODEL_DIR);
-		for (Locale locale : locales) {
+		for (Locale locale : LOCALES) {
 
 			output.append("\n\n******** Creating training and test sets for ").append(locale.toString());
 			output.append(" (").append(minTrainingSampleLength).append("-");
@@ -175,11 +175,11 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 
 		StringBuilder output = new StringBuilder(512);
 
-		BufferedReader sourceFiles[] = new BufferedReader[locales.length];
+		BufferedReader sourceFiles[] = new BufferedReader[LOCALES.length];
 		// first open buffered reader into all files
-		for (int ind = 0; ind < locales.length; ind++) {
+		for (int ind = 0; ind < LOCALES.length; ind++) {
 
-			Locale locale = locales[ind];
+			Locale locale = LOCALES[ind];
 			Path fileWithText = locationBase.resolve(TRAINING_TEST_DIR).resolve(locale.toString() + "_test");
 
 			if (!Files.exists(fileWithText)) {
@@ -206,7 +206,7 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 				// get a line and write to test file
 				while (line == null) {
 					int random = rnd.nextInt(sourceFiles.length);
-					Locale locale = locales[random];
+					Locale locale = LOCALES[random];
 					BufferedReader br = sourceFiles[random];
 					line = br != null ? br.readLine() : null;
 					if (line != null) {
@@ -235,11 +235,11 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 
 		StringBuilder output = new StringBuilder(512);
 
-		Map<Locale, Integer> localeErrorCount = new HashMap<>(locales.length * 2);
-		Map<Locale, Integer> localeTotalCount = new HashMap<>(locales.length * 2);
+		Map<Locale, Integer> localeErrorCount = new HashMap<>(LOCALES.length * 2);
+		Map<Locale, Integer> localeTotalCount = new HashMap<>(LOCALES.length * 2);
 		int totalCount = 0;
 		int totalErrorCount = 0;
-		for (Locale locale : locales) {
+		for (Locale locale : LOCALES) {
 
 			Path testSetPath = locationBase.resolve(TRAINING_TEST_DIR).resolve(locale.toString() + "_test");
 
@@ -251,7 +251,7 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 			String s;
 
 			try (BufferedReader br = new BufferedReader(new InputStreamReader(
-					new FileInputStream(testSetPath.toFile()), UTF_ENCODING));) {
+					new FileInputStream(testSetPath.toFile()), UTF8));) {
 				while ((s = br.readLine()) != null) {
 					incrementLocaleCounts(locale, localeTotalCount);
 					Locale detectedLanguage = getMostLikelyLanguage(s, algorithmToUse);
@@ -302,8 +302,8 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 			return output.toString();
 		}
 
-		Map<Locale, Integer> localeErrorCount = new HashMap<>(locales.length * 2);
-		Map<Locale, Integer> localeTotalCount = new HashMap<>(locales.length * 2);
+		Map<Locale, Integer> localeErrorCount = new HashMap<>(LOCALES.length * 2);
+		Map<Locale, Integer> localeTotalCount = new HashMap<>(LOCALES.length * 2);
 
 		Map<String, Locale> allLanguageStrings = new HashMap<>();
 
@@ -319,7 +319,7 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 				String parts[] = s.split(MULTI_LING_SEPARATOR);
 				assert (parts.length == 2);
 				String testString = parts[0].trim();
-				Locale locale = localeMap.get(parts[1]);
+				Locale locale = LOCALE_MAP.get(parts[1]);
 				incrementLocaleCounts(locale, localeTotalCount);
 
 				if (prevLocale == null || locale.equals(prevLocale)) {
@@ -354,7 +354,7 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 
 		int totalCount = 0;
 		int totalErrorCount = 0;
-		for (Locale locale : locales) {
+		for (Locale locale : LOCALES) {
 
 			if (localeTotalCount.get(locale) != null && localeTotalCount.get(locale) > 0) {
 				totalCount += localeTotalCount.get(locale);

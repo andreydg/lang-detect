@@ -10,19 +10,21 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
+
+import javax.annotation.concurrent.GuardedBy;
 
 import language.classifier.BaggedDecisionTreeClassifier;
 import language.classifier.Classifier;
@@ -43,53 +45,56 @@ public class NgramLanguageDetector implements LanguageDetector {
 	private static final Logger log = Logger.getLogger(NgramLanguageDetector.class.getName());
 	private static final Random rnd = new Random(1);
 
-	public static final String UTF_ENCODING = "UTF-8";
-
-	private Map<Pair<Locale, Integer>, NgramModel> languageNgramModels;
-
+	// path constants
 	protected static String BASE_MODEL_DIR = "languagemodels";
 	protected static final String NGRAM_MODEL_DIR = "ngramModel";
 	public static final String TRAINING_TEST_DIR = "trainingAndTestSet";
 	private static final String LOGISTIC_CLASSFIER_DIR = "logisticClassifier";
+	public static final String UTF8 = "UTF-8";
 
+	// classifier constants
 	private static final Double MIN_SCORE = 0.05;
-
 	private static final int WORD_LENGTH_BOUNDARY = 1;
-
 	private static final int DEFAULT_DECISION_TREE_BAGS = 10;
-
 	private static final ClassificationAlgorithm DEFAULT_CLASSIFIER = ClassificationAlgorithm.LINEAR_WEIGHTS;
 
-	protected final Integer[] ngramSet;
+	// locales
+	protected static final Locale[] LOCALES;
+	protected static final Map<String, Locale> LOCALE_MAP = new HashMap<>();
 
-	private final Set<Integer> populatedModels = new HashSet<>();
-
+	// format
 	protected static DecimalFormat decimalFormat;
 	private static final int scale = 3;
 
-	// can be trained by calling trainDecisionTree
-	private static Map<Locale, BaggedDecisionTreeClassifier<Double, Locale, LanguageDocumentExample>> trainedDecisionTrees;
-	private static Map<Locale, LogisticRegressionClassifier<Locale, LanguageDocumentExample>> trainedLogisticClassifiers;
+	// cache of trained classifiers
+	private final static Lock DF = new ReentrantLock();
+	private final static Lock LC = new ReentrantLock();
 
-	private static Set<Locale> hasTrainingExample;
+	@GuardedBy("DF")
+	private static Map<Locale, Classifier<Double, Locale, LanguageDocumentExample>> DECISION_TREES;
+	@GuardedBy("LC")
+	private static Map<Locale, Classifier<Double, Locale, LanguageDocumentExample>> LOGISITIC_CLASSIFIERS;
+
+	// main ngram models
+	private final Map<Pair<Locale, Integer>, NgramModel> languageNgramModels;
+	protected final Integer[] ngramSet;
+
 	protected final File basePath;
-
-	protected static final Locale[] locales;
-	protected static final Map<String, Locale> localeMap = new HashMap<>();
 
 	static {
 		decimalFormat = new DecimalFormat();
 		decimalFormat.setMinimumFractionDigits(scale);
 		decimalFormat.setMaximumFractionDigits(scale);
 		// EFIGS languages + portugese
-		locales = new Locale[] { Locale.ENGLISH, Locale.FRENCH, Locale.ITALIAN, Locale.GERMAN, new Locale("es"),
+		LOCALES = new Locale[] { Locale.ENGLISH, Locale.FRENCH, Locale.ITALIAN, Locale.GERMAN, new Locale("es"),
 				new Locale("pt") };
-		for (Locale locale : locales) {
-			localeMap.put(locale.toString(), locale);
+		for (Locale locale : LOCALES) {
+			LOCALE_MAP.put(locale.toString(), locale);
 		}
 	}
 
 	public NgramLanguageDetector(File basePath) {
+
 		// if you change this set you need to change set of enums for features
 		// in NgramLanguageModelFeature
 		NgramLanguageModelFeature[] values = NgramLanguageModelFeature.values();
@@ -105,6 +110,9 @@ public class NgramLanguageDetector implements LanguageDetector {
 		this.ngramSet = new Integer[ngrams.size()];
 		this.basePath = basePath;
 		ngrams.toArray(this.ngramSet);
+
+		// init all the models
+		this.languageNgramModels = Collections.unmodifiableMap(populateLanguageModels());
 
 	}
 
@@ -161,8 +169,7 @@ public class NgramLanguageDetector implements LanguageDetector {
 		String locationBase = basePath.getAbsolutePath() + File.separator + BASE_MODEL_DIR + File.separator;
 
 		List<LanguageDocumentExample> examples = new ArrayList<>();
-		hasTrainingExample = new HashSet<>();
-		for (Locale positiveLocale : locales) {
+		for (Locale positiveLocale : LOCALES) {
 
 			String testSetLocation = locationBase + TRAINING_TEST_DIR + File.separator + positiveLocale.toString()
 					+ "_training";
@@ -172,11 +179,9 @@ public class NgramLanguageDetector implements LanguageDetector {
 				continue;
 			}
 
-			hasTrainingExample.add(positiveLocale);
-
 			// need to read in UTF-8
 			String s;
-			try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), UTF_ENCODING))) {
+			try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), UTF8))) {
 				while ((s = br.readLine()) != null) {
 					LanguageDocumentExample trainingExample = getExample(s, addLinearWeightFeature, positiveLocale);
 					examples.add(trainingExample);
@@ -215,11 +220,12 @@ public class NgramLanguageDetector implements LanguageDetector {
 	/*
 	 * Training logistic classifier
 	 */
-	protected final void trainLogisiticClassifier() throws IOException {
+	protected final Map<Locale, Classifier<Double, Locale, LanguageDocumentExample>> trainLogisiticClassifier()
+			throws IOException {
 
 		List<LanguageDocumentExample> examples = getTrainingExamples(true);
 
-		trainedLogisticClassifiers = new HashMap<>();
+		Map<Locale, Classifier<Double, Locale, LanguageDocumentExample>> retVal = new HashMap<>();
 
 		// since training takes a long time we want to train in multiple threads
 		// classifier can not be trained in multiple threads
@@ -230,10 +236,7 @@ public class NgramLanguageDetector implements LanguageDetector {
 				executor);
 
 		int numSubmitted = 0;
-		for (Locale positiveLocale : locales) {
-			if (!hasTrainingExample.contains(positiveLocale)) {
-				continue;
-			}
+		for (Locale positiveLocale : LOCALES) {
 			LanguageDocumentExample someExample = examples.get(0);
 			LogisticRegressionClassifier<Locale, LanguageDocumentExample> localeClassifier = new LogisticRegressionClassifier<>(
 					someExample.getFeatureValues(positiveLocale).size(), positiveLocale);
@@ -242,18 +245,20 @@ public class NgramLanguageDetector implements LanguageDetector {
 			completionService.submit(new LogisticClassifierTrainer(localeClassifier, examples,
 					getLogisitcClassifierFile(positiveLocale)));
 			numSubmitted++;
-			trainedLogisticClassifiers.put(positiveLocale, localeClassifier);
+			retVal.put(positiveLocale, localeClassifier);
 		}
 
 		for (int ind = 0; ind < numSubmitted; ind++) {
 			try {
 				LogisticRegressionClassifier<Locale, LanguageDocumentExample> localeClassifier = completionService
 						.take().get();
-				trainedLogisticClassifiers.put(localeClassifier.getPositiveLabel(), localeClassifier);
+				retVal.put(localeClassifier.getPositiveLabel(), localeClassifier);
 			} catch (Exception ex) {
 				throw new RuntimeException(ex);
 			}
 		}
+
+		return retVal;
 	}
 
 	protected static class LogisticClassifierTrainer implements
@@ -297,21 +302,21 @@ public class NgramLanguageDetector implements LanguageDetector {
 	/*
 	 * Training decision tree
 	 */
-	protected final void trainDecisionTree(int numBags) throws IOException {
+	protected final Map<Locale, Classifier<Double, Locale, LanguageDocumentExample>> trainDecisionTree(int numBags)
+			throws IOException {
 
 		List<LanguageDocumentExample> examples = getTrainingExamples(true);
 
-		trainedDecisionTrees = new HashMap<>();
+		Map<Locale, Classifier<Double, Locale, LanguageDocumentExample>> retVal = new HashMap<>();
 
-		for (Locale positiveLocale : locales) {
-			if (!hasTrainingExample.contains(positiveLocale)) {
-				continue;
-			}
+		for (Locale positiveLocale : LOCALES) {
 			BaggedDecisionTreeClassifier<Double, Locale, LanguageDocumentExample> localeBag = new BaggedDecisionTreeClassifier<>(
 					numBags, positiveLocale, NgramLanguageModelFeature.values());
 			localeBag.train(examples);
-			trainedDecisionTrees.put(positiveLocale, localeBag);
+			retVal.put(positiveLocale, localeBag);
 		}
+
+		return retVal;
 	}
 
 	/**
@@ -335,10 +340,7 @@ public class NgramLanguageDetector implements LanguageDetector {
 		double highestConfidence = 0;
 
 		List<Locale> sameConfidenceLocale = new ArrayList<>();
-		for (Locale locale : locales) {
-			if (!hasTrainingExample.contains(locale)) {
-				continue;
-			}
+		for (Locale locale : LOCALES) {
 
 			double confidenceLevel = classifiers.get(locale).getConfidenceLevel(example);
 			if (confidenceLevel > highestConfidence) {
@@ -363,23 +365,33 @@ public class NgramLanguageDetector implements LanguageDetector {
 	 * Will detect most likely language with with bagged decision tree
 	 * classifier
 	 */
-	public final Locale detectLanguageWithDecisionTree(String text) throws IOException {
+	private final Locale detectLanguageWithDecisionTree(String text) throws IOException {
 
-		if (trainedDecisionTrees == null) {
-			trainDecisionTree(DEFAULT_DECISION_TREE_BAGS);
+		// lazy init
+		if (DECISION_TREES == null) {
+			synchronized (DF) {
+				if (DECISION_TREES != null) {
+					DECISION_TREES = Collections.unmodifiableMap(trainDecisionTree(DEFAULT_DECISION_TREE_BAGS));
+				}
+			}
 		}
-		return detectLanguageClassifier(text, trainedDecisionTrees, true);
+		return detectLanguageClassifier(text, DECISION_TREES, true);
 	}
 
 	/**
 	 * Will detect most likely language with logistic classifier
 	 */
-	public final Locale detectLanguageWithLogisiticClassifier(String text) throws IOException {
+	private final Locale detectLanguageWithLogisiticClassifier(String text) throws IOException {
 
-		if (trainedLogisticClassifiers == null) {
-			trainLogisiticClassifier();
+		// lazy init
+		if (LOGISITIC_CLASSIFIERS == null) {
+			synchronized (LC) {
+				if (LOGISITIC_CLASSIFIERS != null) {
+					LOGISITIC_CLASSIFIERS = Collections.unmodifiableMap(trainLogisiticClassifier());
+				}
+			}
 		}
-		return detectLanguageClassifier(text, trainedLogisticClassifiers, true);
+		return detectLanguageClassifier(text, LOGISITIC_CLASSIFIERS, true);
 	}
 
 	public final Locale getMostLikelyLanguage(String text) throws IOException {
@@ -499,8 +511,6 @@ public class NgramLanguageDetector implements LanguageDetector {
 
 		Map<Locale, Double> retVal = new HashMap<>();
 
-		populateLanguageModels(nGramSize);
-
 		for (Map.Entry<Pair<Locale, Integer>, NgramModel> model : this.languageNgramModels.entrySet()) {
 			// skip models that have different ngram size
 			if (model.getKey().getSecond() != nGramSize) {
@@ -517,37 +527,37 @@ public class NgramLanguageDetector implements LanguageDetector {
 		return retVal;
 	}
 
-	private void populateLanguageModels(int nGramSize) throws IOException {
-		// already populated
-		if (populatedModels.contains(nGramSize)) {
-			return;
-		}
+	private Map<Pair<Locale, Integer>, NgramModel> populateLanguageModels() {
 
-		if (this.languageNgramModels == null) {
-			this.languageNgramModels = new HashMap<>(32);
-		}
+		Map<Pair<Locale, Integer>, NgramModel> retVal = new HashMap<>(32);
 
 		String configDir = this.basePath.getAbsolutePath();
 
 		String locationBase = configDir + File.separator + BASE_MODEL_DIR + File.separator;
 
-		// populate the models and cache them
-		for (Locale locale : locales) {
-			Pair<Locale, Integer> key = new Pair<>(locale, nGramSize);
-			if (this.languageNgramModels.containsKey(key)) {
-				continue;
+		for (Integer nGramSize : ngramSet) {
+
+			// populate the models and cache them
+			for (Locale locale : LOCALES) {
+				Pair<Locale, Integer> key = new Pair<>(locale, nGramSize);
+
+				String modelLocation = locationBase + NGRAM_MODEL_DIR + File.separator + locale.toString() + "_"
+						+ nGramSize;
+				File modelFile = new File(modelLocation);
+				if (!modelFile.exists()) {
+					log.severe("Could not load model from: " + modelLocation);
+					continue;
+				}
+				try {
+					retVal.put(key, readModel(modelFile, locale, nGramSize));
+				} catch (IOException e) {
+					throw new RuntimeException("Failed to read model with key: " + key, e);
+				}
 			}
 
-			String modelLocation = locationBase + NGRAM_MODEL_DIR + File.separator + locale.toString() + "_" + nGramSize;
-			File modelFile = new File(modelLocation);
-			if (!modelFile.exists()) {
-				log.severe("Could not load model from: " + modelLocation);
-				continue;
-			}
-			this.languageNgramModels.put(key, readModel(modelFile, locale, nGramSize));
 		}
 
-		populatedModels.add(nGramSize);
+		return retVal;
 	}
 
 	private NgramModel readModel(File modeFile, Locale locale, int nSize) throws IOException {
@@ -555,7 +565,7 @@ public class NgramLanguageDetector implements LanguageDetector {
 		NgramModel languageModel = new NgramModel(locale, nSize);
 
 		// need to read in UTF-8
-		try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(modeFile), UTF_ENCODING))) {
+		try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(modeFile), UTF8))) {
 			String s;
 			while ((s = br.readLine()) != null) {
 				String[] parts = s.split(NgramModel.NGRAM_SEPARTOR);
@@ -568,7 +578,7 @@ public class NgramLanguageDetector implements LanguageDetector {
 	}
 
 	public static Locale[] getLocales() {
-		return locales;
+		return LOCALES;
 	}
 
 	public final File getBasePath() {

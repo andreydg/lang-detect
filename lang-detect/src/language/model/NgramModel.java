@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.TreeMap;
 
 import language.util.LanguageUtil;
@@ -17,8 +18,7 @@ import language.util.LanguageUtil;
  */
 public class NgramModel {
 
-	private int BASE_TOP_NGRAMS = 50;
-
+	private static final int BASE_TOP_NGRAMS = 50;
 	private final int actualTopNGrams;
 
 	private static DecimalFormat decimalFormat;
@@ -26,11 +26,11 @@ public class NgramModel {
 	private Double lengthNorm;
 
 	private Map<String, Double> rawNgramFrequency;
-	private TreeMap<NGram, Double> sortedNgrams;
+	private SortedMap<NGram, Double> sortedNgrams;
 	// not null when NgramModel represents specific language
 	private Locale languageDefinition;
 
-	public final Map<String, Set<String>> nGramCache = new HashMap<>();
+	public final Map<String, Set<String>> nGramCache;
 
 	private final int ngramSize;
 
@@ -45,6 +45,7 @@ public class NgramModel {
 	}
 
 	public NgramModel(Locale languageDefinition, int ngramSize) {
+		this.nGramCache = new HashMap<>();
 		this.rawNgramFrequency = new HashMap<>(64);
 		this.languageDefinition = languageDefinition;
 		// if this is already normalized vector we don't have to compute length

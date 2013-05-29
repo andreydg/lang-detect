@@ -47,7 +47,8 @@ public class NgramLanguageDetector implements LanguageDetector {
 
 	private Map<Pair<Locale, Integer>, NgramModel> languageNgramModels;
 
-	protected static final String MODEL_DIR = "ngramModel";
+	protected static String BASE_MODEL_DIR = "languagemodels";
+	protected static final String NGRAM_MODEL_DIR = "ngramModel";
 	public static final String TRAINING_TEST_DIR = "trainingAndTestSet";
 	private static final String LOGISTIC_CLASSFIER_DIR = "logisticClassifier";
 
@@ -157,7 +158,7 @@ public class NgramLanguageDetector implements LanguageDetector {
 	protected final List<LanguageDocumentExample> getTrainingExamples(boolean addLinearWeightFeature)
 			throws IOException {
 
-		String locationBase = basePath.getAbsolutePath() + File.separator + "languagemodels" + File.separator;
+		String locationBase = basePath.getAbsolutePath() + File.separator + BASE_MODEL_DIR + File.separator;
 
 		List<LanguageDocumentExample> examples = new ArrayList<>();
 		hasTrainingExample = new HashSet<>();
@@ -282,7 +283,7 @@ public class NgramLanguageDetector implements LanguageDetector {
 	protected final File getLogisitcClassifierFile(Locale locale) {
 
 		String configDir = basePath.getAbsolutePath();
-		String locationBase = configDir + File.separator + "languagemodels" + File.separator;
+		String locationBase = configDir + File.separator + BASE_MODEL_DIR + File.separator;
 		String classifierDir = locationBase + LOGISTIC_CLASSFIER_DIR + File.separator;
 		File classifierDirFile = new File(classifierDir);
 		if (!classifierDirFile.exists()) {
@@ -528,7 +529,7 @@ public class NgramLanguageDetector implements LanguageDetector {
 
 		String configDir = this.basePath.getAbsolutePath();
 
-		String locationBase = configDir + File.separator + "languagemodels" + File.separator;
+		String locationBase = configDir + File.separator + BASE_MODEL_DIR + File.separator;
 
 		// populate the models and cache them
 		for (Locale locale : locales) {
@@ -537,7 +538,7 @@ public class NgramLanguageDetector implements LanguageDetector {
 				continue;
 			}
 
-			String modelLocation = locationBase + MODEL_DIR + File.separator + locale.toString() + "_" + nGramSize;
+			String modelLocation = locationBase + NGRAM_MODEL_DIR + File.separator + locale.toString() + "_" + nGramSize;
 			File modelFile = new File(modelLocation);
 			if (!modelFile.exists()) {
 				log.severe("Could not load model from: " + modelLocation);

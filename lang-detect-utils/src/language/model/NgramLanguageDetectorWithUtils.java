@@ -8,6 +8,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,11 +45,14 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 	private static final int MAX_MULTI_LING_PHRASES = 30000;
 	private static final String MULTI_LING_SEPARATOR = ":::";
 
+	private final Path locationBase;
+
 	private final int minTrainingSampleLength;
 	private final int maxTrainingSampleLength;
 
 	public NgramLanguageDetectorWithUtils(File basePath, int minTrainingSampleLength, int maxTrainingSampleLength) {
 		super(basePath);
+		this.locationBase = basePath.toPath().resolve(BASE_MODEL_DIR);
 		this.minTrainingSampleLength = minTrainingSampleLength;
 		this.maxTrainingSampleLength = maxTrainingSampleLength;
 	}
@@ -55,7 +60,6 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 	public String generateLanguageModels() throws IOException {
 		StringBuilder output = new StringBuilder(256);
 
-		String locationBase = basePath.getAbsolutePath() + File.separator + "languagemodels" + File.separator;
 		for (int nGramSize : ngramSet) {
 
 			// go through all languages and generate ngram models
@@ -66,17 +70,16 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 				System.out.println(outLog);
 				output.append(outLog);
 
-				String sourceLocation = locationBase + SOURCE_DIR + File.separator + locale.toString();
+				Path fileWithText = locationBase.resolve(SOURCE_DIR).resolve(locale.toString());
 
-				File fileWithText = new File(sourceLocation);
-				if (!fileWithText.exists()) {
+				if (!Files.exists(fileWithText)) {
 					output.append("+++++ Skipping generating ngram model for ").append(locale.toString());
 					output.append(" since source file does not exist\n");
 					continue;
 				}
 
 				NgramModel languageModel = new NgramModel(nGramSize);
-				try (BufferedReader br = new BufferedReader(new FileReader(fileWithText))) {
+				try (BufferedReader br = new BufferedReader(new FileReader(fileWithText.toFile()))) {
 					String s;
 					while ((s = br.readLine()) != null) {
 						languageModel = this.getNgramModelForText(s, languageModel, false);
@@ -86,15 +89,11 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 				// get the model
 				String ngramModel = languageModel.toString();
 
-				String modelLocationDir = locationBase + MODEL_DIR + File.separator;
-				File modelLocationDirFile = new File(modelLocationDir);
-				if (!modelLocationDirFile.exists()) {
-					modelLocationDirFile.mkdir();
-				}
+				Path modelLocationDirFile = checkAndCreateDir(locationBase.resolve(NGRAM_MODEL_DIR));
 
-				String modelLocation = modelLocationDir + locale.toString() + "_" + nGramSize;
+				Path modelLocation = modelLocationDirFile.resolve(locale.toString() + "_" + nGramSize);
 
-				try (BufferedWriter out = new BufferedWriter(new FileWriter(modelLocation))) {
+				try (BufferedWriter out = new BufferedWriter(new FileWriter(modelLocation.toFile()))) {
 					out.write(ngramModel);
 				}
 			}
@@ -107,17 +106,15 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 
 		StringBuilder output = new StringBuilder(512);
 
-		String locationBase = basePath.getAbsolutePath() + File.separator + "languagemodels" + File.separator;
+		Path locationBase = basePath.toPath().resolve(BASE_MODEL_DIR);
 		for (Locale locale : locales) {
 
 			output.append("\n\n******** Creating training and test sets for ").append(locale.toString());
 			output.append(" (").append(minTrainingSampleLength).append("-");
 			output.append(maxTrainingSampleLength).append(") ********\n");
 
-			String sourceLocation = locationBase + SOURCE_DIR + File.separator + locale.toString();
-
-			File fileWithText = new File(sourceLocation);
-			if (!fileWithText.exists()) {
+			Path fileWithText = locationBase.resolve(SOURCE_DIR).resolve(locale.toString());
+			if (!Files.exists(fileWithText)) {
 				output.append("+++++ Skipping generating training and test sets for ").append(locale.toString());
 				output.append(" since source file does not exist\n");
 				continue;
@@ -125,7 +122,7 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 
 			List<String> trainingSet = new ArrayList<>();
 			List<String> testSet = new ArrayList<>();
-			try (BufferedReader br = new BufferedReader(new FileReader(fileWithText))) {
+			try (BufferedReader br = new BufferedReader(new FileReader(fileWithText.toFile()))) {
 
 				String s;
 				StringBuilder sb = new StringBuilder(128);
@@ -154,21 +151,17 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 			}
 
 			// write test set and training set
-			String trainingTestSetLocation = locationBase + TRAINING_TEST_DIR + File.separator;
-			File trainingTestSetLocationFile = new File(trainingTestSetLocation);
-			if (!trainingTestSetLocationFile.exists()) {
-				trainingTestSetLocationFile.mkdir();
-			}
+			Path trainingTestSetPath = checkAndCreateDir(locationBase.resolve(TRAINING_TEST_DIR));
 
-			try (BufferedWriter outForTraining = new BufferedWriter(new FileWriter(trainingTestSetLocation
-					+ locale.toString() + "_training"));) {
+			try (BufferedWriter outForTraining = new BufferedWriter(new FileWriter(trainingTestSetPath.resolve(
+					locale.toString() + "_training").toFile()))) {
 				for (String training : trainingSet) {
 					outForTraining.write(training + "\n");
 				}
 			}
 
-			try (BufferedWriter outForTesting = new BufferedWriter(new FileWriter(trainingTestSetLocation
-					+ locale.toString() + "_test"));) {
+			try (BufferedWriter outForTesting = new BufferedWriter(new FileWriter(trainingTestSetPath.resolve(
+					locale.toString() + "_test").toFile()))) {
 				for (String test : testSet) {
 					outForTesting.write(test + "\n");
 				}
@@ -182,36 +175,29 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 
 		StringBuilder output = new StringBuilder(512);
 
-		String locationBase = basePath.getAbsolutePath() + File.separator + "languagemodels" + File.separator;
-
 		BufferedReader sourceFiles[] = new BufferedReader[locales.length];
-
 		// first open buffered reader into all files
 		for (int ind = 0; ind < locales.length; ind++) {
 
 			Locale locale = locales[ind];
-			String sourceLocation = locationBase + TRAINING_TEST_DIR + File.separator + locale.toString() + "_test";
+			Path fileWithText = locationBase.resolve(TRAINING_TEST_DIR).resolve(locale.toString() + "_test");
 
-			File fileWithText = new File(sourceLocation);
-			if (!fileWithText.exists()) {
+			if (!Files.exists(fileWithText)) {
 				output.append("+++++ Skipping generating multilingual test sets for ").append(locale.toString());
 				output.append(" since source test set file does not exist\n");
 				continue;
 			}
 
-			sourceFiles[ind] = new BufferedReader(new FileReader(fileWithText));
+			sourceFiles[ind] = new BufferedReader(new FileReader(fileWithText.toFile()));
 		}
 
 		output.append("\n\n******** Creating multilingual test set from existing test sets ********\n");
 
 		// write test set and training set
-		String multilingTestSetLocation = locationBase + MULTI_LANG_TEST_DIR + File.separator;
-		File trainingTestSetLocationFile = new File(multilingTestSetLocation);
-		if (!trainingTestSetLocationFile.exists()) {
-			trainingTestSetLocationFile.mkdir();
-		}
+		Path trainingTestSetLocation = checkAndCreateDir(locationBase.resolve(MULTI_LANG_TEST_DIR));
 
-		try (BufferedWriter outForTest = new BufferedWriter(new FileWriter(multilingTestSetLocation + "testSet"));) {
+		try (BufferedWriter outForTest = new BufferedWriter(new FileWriter(trainingTestSetLocation.resolve("testSet")
+				.toFile()));) {
 			// total of MAX_MULTILNGUAL_PHRASES phrase in different languages
 			// their length will be identical to length of phrases generated in
 			// original test set files
@@ -239,7 +225,6 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 		}
 
 		return output.toString();
-
 	}
 
 	private int generateRandomSampleLength() {
@@ -250,24 +235,23 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 
 		StringBuilder output = new StringBuilder(512);
 
-		String locationBase = basePath.getAbsolutePath() + File.separator + "languagemodels" + File.separator;
 		Map<Locale, Integer> localeErrorCount = new HashMap<>(locales.length * 2);
 		Map<Locale, Integer> localeTotalCount = new HashMap<>(locales.length * 2);
 		int totalCount = 0;
 		int totalErrorCount = 0;
 		for (Locale locale : locales) {
 
-			String testSetLocation = locationBase + TRAINING_TEST_DIR + File.separator + locale.toString() + "_test";
+			Path testSetPath = locationBase.resolve(TRAINING_TEST_DIR).resolve(locale.toString() + "_test");
 
 			// need to read in UTF-8
-			File file = new File(testSetLocation);
-			if (!file.exists()) {
+			if (!Files.exists(testSetPath)) {
 				continue;
 			}
 
 			String s;
 
-			try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), UTF_ENCODING));) {
+			try (BufferedReader br = new BufferedReader(new InputStreamReader(
+					new FileInputStream(testSetPath.toFile()), UTF_ENCODING));) {
 				while ((s = br.readLine()) != null) {
 					incrementLocaleCounts(locale, localeTotalCount);
 					Locale detectedLanguage = getMostLikelyLanguage(s, algorithmToUse);
@@ -311,12 +295,10 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 
 		StringBuilder output = new StringBuilder(512);
 
-		String locationBase = basePath.getAbsolutePath() + File.separator + "languagemodels" + File.separator;
-		String multilingTestSetLocation = locationBase + MULTI_LANG_TEST_DIR + File.separator + "testSet";
+		Path fileWithText = locationBase.resolve(MULTI_LANG_TEST_DIR).resolve("testSet");
 
-		File fileWithText = new File(multilingTestSetLocation);
-		if (!fileWithText.exists()) {
-			output.append("+++++ Error: can't open multilingual test file at ").append(multilingTestSetLocation);
+		if (!Files.exists(fileWithText)) {
+			output.append("+++++ Error: can't open multilingual test file at ").append(fileWithText);
 			return output.toString();
 		}
 
@@ -330,7 +312,7 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 		StringBuilder entireDocument = new StringBuilder();
 		int numDuplicates = 0;
 		StringBuilder actualLanguageTags = new StringBuilder();
-		try (BufferedReader br = new BufferedReader(new FileReader(fileWithText))) {
+		try (BufferedReader br = new BufferedReader(new FileReader(fileWithText.toFile()))) {
 			Locale prevLocale = null;
 			StringBuilder prevString = new StringBuilder();
 			while ((s = br.readLine()) != null) {
@@ -455,14 +437,14 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 		}
 
 		// write the results of the run for analysis
-		String multilingOutput = locationBase + MULTI_LANG_TEST_DIR + File.separator + "runOutput";
-		try (BufferedWriter out = new BufferedWriter(new FileWriter(multilingOutput));) {
+		Path multilingOutput = locationBase.resolve(MULTI_LANG_TEST_DIR).resolve("runOutput");
+		try (BufferedWriter out = new BufferedWriter(new FileWriter(multilingOutput.toFile()));) {
 			out.write(runOutput.toString());
 		}
 
 		// write the results of the run for analysis
-		String multilingExactSet = locationBase + MULTI_LANG_TEST_DIR + File.separator + "exactSetOutput";
-		try (BufferedWriter out = new BufferedWriter(new FileWriter(multilingExactSet));) {
+		Path multilingExactSet = locationBase.resolve(MULTI_LANG_TEST_DIR).resolve("exactSetOutput");
+		try (BufferedWriter out = new BufferedWriter(new FileWriter(multilingExactSet.toFile()));) {
 			out.write(actualLanguageTags.toString());
 		}
 
@@ -489,5 +471,12 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 		} else {
 			map.put(locale, currentCount + 1);
 		}
+	}
+
+	private Path checkAndCreateDir(Path dir) throws IOException {
+		if (!Files.exists(dir)) {
+			Files.createDirectories(dir);
+		}
+		return dir;
 	}
 }

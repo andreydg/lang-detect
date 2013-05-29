@@ -18,14 +18,15 @@ public enum NgramLanguageModelFeature implements DecisionTreeFeature<Double> {
 
 	LINEAR_COMBINATION(0, true), _1GRAM(1), _2GRAM(2), _3GRAM(3), _4GRAM(4), _5GRAM(5), _6GRAM(6);
 
-	private final int nGramSize;
-	private final boolean nonStandard;
-	private static final List<Double> possibleValues = new ArrayList<>();
-	private static final List<Range<Double>> ranges = new ArrayList<>();
+	private static final List<Double> POSSIBLE_VALUES = new ArrayList<>();
+	private static final List<Range<Double>> RANGES = new ArrayList<>();
 
 	private static final double RANGE_START = 0.00;
 	private static final double RANGE_INCREMENT = 0.10;
 	private static final double RANGE_END = 1.00;
+	
+	private final int nGramSize;
+	private final boolean nonStandard;
 
 	private NgramLanguageModelFeature(int nGramSize) {
 		this(nGramSize, false);
@@ -49,19 +50,19 @@ public enum NgramLanguageModelFeature implements DecisionTreeFeature<Double> {
 		// more values that are closer max value since we would like to split on
 		// those values
 		for (double value = RANGE_START; value < RANGE_END; value += RANGE_INCREMENT) {
-			possibleValues.add(value);
+			POSSIBLE_VALUES.add(value);
 		}
 
 		// value ranges
-		ranges.add(new Range<>(null, possibleValues.get(0)));
-		for (int ind = 0; ind < possibleValues.size() - 1; ind++) {
-			ranges.add(new Range<>(possibleValues.get(ind), possibleValues.get(ind + 1)));
+		RANGES.add(new Range<>(null, POSSIBLE_VALUES.get(0)));
+		for (int ind = 0; ind < POSSIBLE_VALUES.size() - 1; ind++) {
+			RANGES.add(new Range<>(POSSIBLE_VALUES.get(ind), POSSIBLE_VALUES.get(ind + 1)));
 		}
-		ranges.add(new Range<>(possibleValues.get(possibleValues.size() - 1), null));
+		RANGES.add(new Range<>(POSSIBLE_VALUES.get(POSSIBLE_VALUES.size() - 1), null));
 	}
 
 	public List<? extends Comparable<Double>> getPossibleValues() {
-		return possibleValues;
+		return POSSIBLE_VALUES;
 	}
 
 	public int getNGramSize() {
@@ -73,7 +74,7 @@ public enum NgramLanguageModelFeature implements DecisionTreeFeature<Double> {
 	}
 
 	public List<Range<Double>> getRanges() {
-		return ranges;
+		return RANGES;
 	}
 
 	public static NgramLanguageModelFeature getEnumByValue(int value) {

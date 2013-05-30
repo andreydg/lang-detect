@@ -15,6 +15,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorCompletionService;
@@ -206,8 +208,7 @@ public class NgramLanguageDetector implements LanguageDetector {
 		if (addLinearWeightFeature) {
 			// add special linear combination feature
 			Map<Locale, Double> linearCombination = new HashMap<>();
-			List<Entry<Locale, Double>> list = this.detectLanguageWithLinearWeights(s, false);
-			for (Entry<Locale, Double> entry : list) {
+			for (Entry<Locale, Double> entry : this.detectLanguageWithLinearWeights(s, false)) {
 				linearCombination.put(entry.getKey(), entry.getValue());
 			}
 
@@ -420,19 +421,19 @@ public class NgramLanguageDetector implements LanguageDetector {
 	 * @return most likely language
 	 */
 	public final Locale getLanguageWithLinerWeights(String text) throws IOException {
-		List<Entry<Locale, Double>> list = this.detectLanguageWithLinearWeights(text, true);
-		if (list != null && list.size() > 0) {
-			return list.get(0).getKey();
+		SortedSet<Entry<Locale, Double>> set = this.detectLanguageWithLinearWeights(text, true);
+		if (set != null && set.size() > 0) {
+			return set.first().getKey();
 		} else {
 			return null;
 		}
 	}
 
 	/**
-	 * returns ordered list of languages that are most similar to given text,
+	 * returns ordered set of languages that are most similar to given text,
 	 * using all nGram sizes specified for language detector
 	 */
-	public final List<Entry<Locale, Double>> detectLanguageWithLinearWeights(String text, boolean ignoreLowScores)
+	public final SortedSet<Entry<Locale, Double>> detectLanguageWithLinearWeights(String text, boolean ignoreLowScores)
 			throws IOException {
 
 		List<Map<Locale, Double>> listOfRawCosineSimilaties = new ArrayList<>(ngramSet.length);
@@ -483,9 +484,8 @@ public class NgramLanguageDetector implements LanguageDetector {
 		return getValueSortedDescendingEntries(retValue);
 	}
 
-	private List<Entry<Locale, Double>> getValueSortedDescendingEntries(Map<Locale, Double> map) {
-		List<Entry<Locale, Double>> list = new ArrayList<>(map.entrySet());
-		Collections.sort(list, new Comparator<Entry<Locale, Double>>() {
+	private SortedSet<Entry<Locale, Double>> getValueSortedDescendingEntries(Map<Locale, Double> map) {
+		SortedSet<Entry<Locale, Double>> retVal = new TreeSet<>(new Comparator<Entry<Locale, Double>>() {
 
 			public int compare(Entry<Locale, Double> a, Entry<Locale, Double> b) {
 				// since since we want discening list multiply by -1
@@ -493,8 +493,10 @@ public class NgramLanguageDetector implements LanguageDetector {
 			}
 
 		});
+		
+		retVal.addAll(map.entrySet());
 
-		return list;
+		return retVal;
 	}
 
 	/**

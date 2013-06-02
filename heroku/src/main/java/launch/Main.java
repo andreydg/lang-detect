@@ -5,7 +5,7 @@ import org.apache.catalina.startup.Tomcat;
 
 public class Main {
 
-    private static final String WEBAPP_DIR_LOCATION = "../lang-detect/war/";	
+    private static final String WEBAPP_DIR_LOCATION = "war/";	
 
 
     public static void main(String[] args) throws Exception {

@@ -7,6 +7,13 @@ Live systems:
 
 * http://lang.andreyg.com (Google App Engine)
 * http://andreyg-lang-detect.herokuapp.com (Heroku)
+* 
+
+To deploy to app-engine
+
+* Open checked in eclipe project
+* See <code> WEB-INF/appengine-web.xml </code> and <code> WEB-INF/web.xml </code>
+* Use app-engine plugin
 
 
 To deploy to heroku

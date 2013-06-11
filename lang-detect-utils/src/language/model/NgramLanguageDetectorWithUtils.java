@@ -17,13 +17,13 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 
-import language.model.multiling.BaseBigramLanguageBoundaryDetector;
+import language.model.multiling.BigramBoundaryDetector;
 import language.model.multiling.LanguageBoundaryDetector;
-import language.model.multiling.NestedSlidingWindowWithBigramLanguageBoundaryDetector;
-import language.model.multiling.OneWordLanguageBoundaryDetector;
-import language.model.multiling.SlidingWindowWithBigramLanguageBoundaryDetector;
-import language.model.multiling.ThreeWordLanguageBoundaryDetector;
-import language.model.multiling.TwoWordLanguageBoundaryDetector;
+import language.model.multiling.NestedSlidingWindowBigramBoundaryDetector;
+import language.model.multiling.OneWordBoundaryDetector;
+import language.model.multiling.SlidingWindowBigramBoundaryDetector;
+import language.model.multiling.ThreeWordBoundaryDetector;
+import language.model.multiling.TwoWordBoundaryDetector;
 import language.util.LanguageUtil;
 import language.util.Pair;
 
@@ -383,34 +383,34 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 		LanguageBoundaryDetector detector = null;
 		switch (boundaryDetector) {
 		case ONE_WORD:
-			detector = new OneWordLanguageBoundaryDetector(algorithmToUse, this);
+			detector = new OneWordBoundaryDetector(algorithmToUse, this);
 			break;
 		case TWO_WORD:
-			detector = new TwoWordLanguageBoundaryDetector(algorithmToUse, this);
+			detector = new TwoWordBoundaryDetector(algorithmToUse, this);
 			break;
 		case THREE_WORD:
-			detector = new ThreeWordLanguageBoundaryDetector(algorithmToUse, this);
+			detector = new ThreeWordBoundaryDetector(algorithmToUse, this);
 			break;
 		case BASE_BIGRAM:
-			detector = new BaseBigramLanguageBoundaryDetector(algorithmToUse, this);
+			detector = new BigramBoundaryDetector(algorithmToUse, this);
 			break;
 		case TWO_WORD_BIGRAM:
-			detector = new SlidingWindowWithBigramLanguageBoundaryDetector(algorithmToUse, this, 2);
+			detector = new SlidingWindowBigramBoundaryDetector(algorithmToUse, this, 2);
 			break;
 		case THREE_WORD_BIGRAM:
-			detector = new SlidingWindowWithBigramLanguageBoundaryDetector(algorithmToUse, this, 3);
+			detector = new SlidingWindowBigramBoundaryDetector(algorithmToUse, this, 3);
 			break;
 		case FOUR_WORD_BIGRAM:
-			detector = new SlidingWindowWithBigramLanguageBoundaryDetector(algorithmToUse, this, 4);
+			detector = new SlidingWindowBigramBoundaryDetector(algorithmToUse, this, 4);
 			break;
 		case FIVE_WORD_BIGRAM:
-			detector = new SlidingWindowWithBigramLanguageBoundaryDetector(algorithmToUse, this, 5);
+			detector = new SlidingWindowBigramBoundaryDetector(algorithmToUse, this, 5);
 			break;
 		case SIX_WORD_BIGRAM:
-			detector = new SlidingWindowWithBigramLanguageBoundaryDetector(algorithmToUse, this, 6);
+			detector = new SlidingWindowBigramBoundaryDetector(algorithmToUse, this, 6);
 			break;
 		case FIVE_WORD_NESTED:
-			detector = new NestedSlidingWindowWithBigramLanguageBoundaryDetector(algorithmToUse, this, 5);
+			detector = new NestedSlidingWindowBigramBoundaryDetector(algorithmToUse, this, 5);
 			break;
 		}
 		List<Pair<String, Locale>> languageTags = detector.tagStringWithLanguages(entireDocument.toString());

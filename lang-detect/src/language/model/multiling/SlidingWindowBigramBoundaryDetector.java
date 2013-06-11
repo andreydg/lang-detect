@@ -2,11 +2,14 @@ package language.model.multiling;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
+
+import javax.annotation.concurrent.ThreadSafe;
 
 import language.model.NgramLanguageDetector;
 import language.model.NgramLanguageDetector.ClassificationAlgorithm;
@@ -21,7 +24,8 @@ import language.util.Pair;
  * @author Andrey Gusev
  * 
  */
-public class SlidingWindowWithBigramLanguageBoundaryDetector extends BaseBigramLanguageBoundaryDetector {
+@ThreadSafe
+public class SlidingWindowBigramBoundaryDetector extends BigramBoundaryDetector {
 
 	private final int windowSize;
 
@@ -29,15 +33,16 @@ public class SlidingWindowWithBigramLanguageBoundaryDetector extends BaseBigramL
 	private static final Map<Integer, int[]> boundaryPreferenceOrder;
 
 	static {
-		boundaryPreferenceOrder = new HashMap<Integer, int[]>();
-		boundaryPreferenceOrder.put(2, new int[] { 0 });
-		boundaryPreferenceOrder.put(3, new int[] { 1, 0 });
-		boundaryPreferenceOrder.put(4, new int[] { 1, 2, 0 });
-		boundaryPreferenceOrder.put(5, new int[] { 2, 1, 3, 0 });
-		boundaryPreferenceOrder.put(6, new int[] { 2, 3, 1, 4, 0 });
+		Map<Integer, int[]> temp = new HashMap<Integer, int[]>();
+		temp.put(2, new int[] { 0 });
+		temp.put(3, new int[] { 1, 0 });
+		temp.put(4, new int[] { 1, 2, 0 });
+		temp.put(5, new int[] { 2, 1, 3, 0 });
+		temp.put(6, new int[] { 2, 3, 1, 4, 0 });
+		boundaryPreferenceOrder = Collections.unmodifiableMap(temp);
 	}
 
-	public SlidingWindowWithBigramLanguageBoundaryDetector(ClassificationAlgorithm algorithmToUse,
+	public SlidingWindowBigramBoundaryDetector(ClassificationAlgorithm algorithmToUse,
 			NgramLanguageDetector detector, int windowSize) throws IOException {
 		super(algorithmToUse, detector);
 		int[] orderPreference = boundaryPreferenceOrder.get(windowSize);

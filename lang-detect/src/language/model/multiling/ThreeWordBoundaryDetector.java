@@ -18,14 +18,10 @@ import language.util.Pair;
  * @author Andrey Gusev
  * 
  */
-public class ThreeWordLanguageBoundaryDetector implements LanguageBoundaryDetector {
+public class ThreeWordBoundaryDetector extends BaseNWordBoundaryDetector {
 
-	private final ClassificationAlgorithm algorithmToUse;
-	private final NgramLanguageDetector detector;
-
-	public ThreeWordLanguageBoundaryDetector(ClassificationAlgorithm algorithmToUse, NgramLanguageDetector detector) {
-		this.algorithmToUse = algorithmToUse;
-		this.detector = detector;
+	public ThreeWordBoundaryDetector(ClassificationAlgorithm algorithmToUse, NgramLanguageDetector detector) {
+		super(algorithmToUse, detector);
 	}
 
 	public List<Pair<String, Locale>> tagStringWithLanguages(String s) throws IOException {

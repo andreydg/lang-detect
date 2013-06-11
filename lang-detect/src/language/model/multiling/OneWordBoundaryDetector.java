@@ -18,14 +18,11 @@ import language.util.Pair;
  * @author Andrey Gusev
  * 
  */
-public class OneWordLanguageBoundaryDetector implements LanguageBoundaryDetector {
+public class OneWordBoundaryDetector extends BaseNWordBoundaryDetector {
 
-	private final ClassificationAlgorithm algorithmToUse;
-	private final NgramLanguageDetector detector;
 
-	public OneWordLanguageBoundaryDetector(ClassificationAlgorithm algorithmToUse, NgramLanguageDetector detector) {
-		this.algorithmToUse = algorithmToUse;
-		this.detector = detector;
+	public OneWordBoundaryDetector(ClassificationAlgorithm algorithmToUse, NgramLanguageDetector detector) {
+		super(algorithmToUse, detector);
 	}
 
 	/**

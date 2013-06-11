@@ -26,7 +26,7 @@
 		// allow both windows and linux compatibility
 				
 		NgramLanguageDetector detector = new NgramLanguageDetector(baseFilePath);
-		LanguageBoundaryDetector boundaryDetector = new SlidingWindowWithBigramLanguageBoundaryDetector(
+		LanguageBoundaryDetector boundaryDetector = new SlidingWindowBigramBoundaryDetector(
 				ClassificationAlgorithm.LINEAR_WEIGHTS, detector, 4);
 		String q = request.getParameter("q");
 		boolean isMulti = request.getParameter("m") != null;

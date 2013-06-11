@@ -6,11 +6,17 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+import javax.annotation.concurrent.GuardedBy;
+import javax.annotation.concurrent.ThreadSafe;
 
 import language.model.NgramLanguageDetector;
 import language.model.NgramLanguageDetector.ClassificationAlgorithm;
@@ -23,22 +29,33 @@ import language.util.Pair;
  * @author Andrey Gusev
  * 
  */
-public class BaseBigramLanguageBoundaryDetector implements LanguageBoundaryDetector {
+@ThreadSafe
+public class BigramBoundaryDetector extends BaseNWordBoundaryDetector {
 
-	protected final ClassificationAlgorithm algorithmToUse;
-	protected final NgramLanguageDetector detector;
 
-	protected static Map<String, Integer> bigramCounts;
+	private final static Lock BC = new ReentrantLock();
 
-	public BaseBigramLanguageBoundaryDetector(ClassificationAlgorithm algorithmToUse, NgramLanguageDetector detector)
+	@GuardedBy("BC")
+	protected static volatile Map<String, Integer> BIGRAM_COUNTS;
+
+	public BigramBoundaryDetector(ClassificationAlgorithm algorithmToUse, NgramLanguageDetector detector)
 			throws IOException {
+		super(algorithmToUse, detector);
+		lazyInitBigramCounts();
 
-		this.algorithmToUse = algorithmToUse;
-		this.detector = detector;
+	}
 
+	private void lazyInitBigramCounts() throws IOException {
 		// initialize only once
-		if (bigramCounts == null) {
-			bigramCounts = getBigramCounts();
+		if (BIGRAM_COUNTS == null) {
+			BC.lock();
+			try {
+				if (BIGRAM_COUNTS == null) {
+					BIGRAM_COUNTS = Collections.unmodifiableMap(getBigramCounts());
+				}
+			} finally {
+				BC.unlock();
+			}
 		}
 	}
 
@@ -46,8 +63,8 @@ public class BaseBigramLanguageBoundaryDetector implements LanguageBoundaryDetec
 
 		Map<String, Integer> retVal = new HashMap<>();
 
-		String locationBase = this.detector.getBasePath().getAbsolutePath() + File.separator + "languagemodels"
-				+ File.separator;
+		String locationBase = this.detector.getBasePath().getAbsolutePath() + File.separator
+				+ NgramLanguageDetector.BASE_MODEL_DIR + File.separator;
 		for (Locale locale : NgramLanguageDetector.getLocales()) {
 
 			// _training
@@ -136,8 +153,7 @@ public class BaseBigramLanguageBoundaryDetector implements LanguageBoundaryDetec
 			// language
 			if (previousPair.getSecond().equals(thisPair.getSecond())) {
 				retVal.remove(retVal.size() - 1);
-				retVal.add(new Pair<>(previousPair.getFirst() + " " + stringToAdd, previousPair
-						.getSecond()));
+				retVal.add(new Pair<>(previousPair.getFirst() + " " + stringToAdd, previousPair.getSecond()));
 			} else {
 				retVal.add(thisPair);
 			}
@@ -147,7 +163,7 @@ public class BaseBigramLanguageBoundaryDetector implements LanguageBoundaryDetec
 	}
 
 	protected int getBigramCount(String s) {
-		Integer count = bigramCounts.get(s);
+		Integer count = BIGRAM_COUNTS.get(s);
 		if (count == null) {
 			return 0;
 		} else {

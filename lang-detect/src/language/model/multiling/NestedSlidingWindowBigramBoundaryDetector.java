@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
 
+import javax.annotation.concurrent.ThreadSafe;
+
 import language.model.NgramLanguageDetector;
 import language.model.NgramLanguageDetector.ClassificationAlgorithm;
 import language.util.Pair;
@@ -15,12 +17,13 @@ import language.util.Pair;
  * @author Andrey Gusev
  * 
  */
-public class NestedSlidingWindowWithBigramLanguageBoundaryDetector extends BaseBigramLanguageBoundaryDetector {
+@ThreadSafe
+public class NestedSlidingWindowBigramBoundaryDetector extends BigramBoundaryDetector {
 
 	private final int windowSize;
 	private static final int NESTED_WINDOW = 3;
 
-	public NestedSlidingWindowWithBigramLanguageBoundaryDetector(ClassificationAlgorithm algorithmToUse,
+	public NestedSlidingWindowBigramBoundaryDetector(ClassificationAlgorithm algorithmToUse,
 			NgramLanguageDetector detector, int windowSize) throws IOException {
 		super(algorithmToUse, detector);
 		assert this.windowSize > NESTED_WINDOW : "Window size needs to be larger than nested window";
@@ -130,7 +133,7 @@ public class NestedSlidingWindowWithBigramLanguageBoundaryDetector extends BaseB
 	}
 
 	private int getBreakingPoint(String s) throws IOException {
-		LanguageBoundaryDetector smallerDetector = new SlidingWindowWithBigramLanguageBoundaryDetector(
+		LanguageBoundaryDetector smallerDetector = new SlidingWindowBigramBoundaryDetector(
 				this.algorithmToUse, this.detector, NESTED_WINDOW);
 		List<Pair<String, Locale>> retVal = smallerDetector.tagStringWithLanguages(s);
 		// hopefully there was exactly one split - otherwise we'll take the

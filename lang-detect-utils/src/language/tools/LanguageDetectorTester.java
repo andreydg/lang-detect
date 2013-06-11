@@ -16,7 +16,7 @@ import language.model.NgramLanguageDetectorWithUtils;
 import language.model.NgramLanguageDetector.BoundaryDetectionAlgorithm;
 import language.model.NgramLanguageDetector.ClassificationAlgorithm;
 import language.model.multiling.LanguageBoundaryDetector;
-import language.model.multiling.SlidingWindowWithBigramLanguageBoundaryDetector;
+import language.model.multiling.SlidingWindowBigramBoundaryDetector;
 import language.util.Pair;
 
 /**
@@ -115,7 +115,7 @@ public class LanguageDetectorTester {
 					testMultiString = br.readLine();
 
 					if (testMultiString != null && testMultiString.length() > 0) {
-						LanguageBoundaryDetector boundaryDetector = new SlidingWindowWithBigramLanguageBoundaryDetector(
+						LanguageBoundaryDetector boundaryDetector = new SlidingWindowBigramBoundaryDetector(
 								ClassificationAlgorithm.LINEAR_WEIGHTS, detector, 4);
 
 						List<Pair<String, Locale>> retVal = boundaryDetector.tagStringWithLanguages(testMultiString);

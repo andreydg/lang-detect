@@ -48,10 +48,11 @@ public class NgramLanguageDetector implements LanguageDetector {
 	private static final Random rnd = new Random(1);
 
 	// path constants
-	protected static String BASE_MODEL_DIR = "languagemodels";
-	protected static final String NGRAM_MODEL_DIR = "ngramModel";
+	public static String BASE_MODEL_DIR = "languagemodels";
+	public static final String NGRAM_MODEL_DIR = "ngramModel";
 	public static final String TRAINING_TEST_DIR = "trainingAndTestSet";
-	private static final String LOGISTIC_CLASSFIER_DIR = "logisticClassifier";
+	public static final String LOGISTIC_CLASSFIER_DIR = "logisticClassifier";
+	
 	public static final String UTF8 = "UTF-8";
 
 	// classifier constants
@@ -62,20 +63,20 @@ public class NgramLanguageDetector implements LanguageDetector {
 
 	// locales
 	protected static final Locale[] LOCALES;
-	protected static final Map<String, Locale> LOCALE_MAP = new HashMap<>();
+	protected static final Map<String, Locale> LOCALE_MAP;
 
 	// format
 	protected static DecimalFormat decimalFormat;
 	private static final int scale = 3;
-
-	// cache of trained classifiers
+	
 	private final static Lock DF = new ReentrantLock();
 	private final static Lock LC = new ReentrantLock();
 
+	// cache of trained classifiers
 	@GuardedBy("DF")
-	private static Map<Locale, Classifier<Double, Locale, LanguageDocumentExample>> DECISION_TREES;
+	private static volatile Map<Locale, Classifier<Double, Locale, LanguageDocumentExample>> DECISION_TREES;
 	@GuardedBy("LC")
-	private static Map<Locale, Classifier<Double, Locale, LanguageDocumentExample>> LOGISITIC_CLASSIFIERS;
+	private static volatile Map<Locale, Classifier<Double, Locale, LanguageDocumentExample>> LOGISITIC_CLASSIFIERS;
 
 	// main ngram models
 	private final Map<Pair<Locale, Integer>, NgramModel> languageNgramModels;
@@ -87,12 +88,15 @@ public class NgramLanguageDetector implements LanguageDetector {
 		decimalFormat = new DecimalFormat();
 		decimalFormat.setMinimumFractionDigits(scale);
 		decimalFormat.setMaximumFractionDigits(scale);
-		// EFIGS languages + portugese
+		// EFIGS languages + portuguese
 		LOCALES = new Locale[] { Locale.ENGLISH, Locale.FRENCH, Locale.ITALIAN, Locale.GERMAN, new Locale("es"),
 				new Locale("pt") };
+		
+		Map<String, Locale> tempMap = new HashMap<>();
 		for (Locale locale : LOCALES) {
-			LOCALE_MAP.put(locale.toString(), locale);
+			tempMap.put(locale.toString(), locale);
 		}
+		LOCALE_MAP = Collections.unmodifiableMap(tempMap);
 	}
 
 	public NgramLanguageDetector(File basePath) {
@@ -370,10 +374,13 @@ public class NgramLanguageDetector implements LanguageDetector {
 
 		// lazy init
 		if (DECISION_TREES == null) {
-			synchronized (DF) {
+			DF.lock();
+			try {
 				if (DECISION_TREES != null) {
 					DECISION_TREES = Collections.unmodifiableMap(trainDecisionTree(DEFAULT_DECISION_TREE_BAGS));
 				}
+			} finally {
+				DF.unlock();
 			}
 		}
 		return detectLanguageClassifier(text, DECISION_TREES, true);
@@ -386,10 +393,13 @@ public class NgramLanguageDetector implements LanguageDetector {
 
 		// lazy init
 		if (LOGISITIC_CLASSIFIERS == null) {
-			synchronized (LC) {
+			LC.lock();
+			try {
 				if (LOGISITIC_CLASSIFIERS != null) {
 					LOGISITIC_CLASSIFIERS = Collections.unmodifiableMap(trainLogisiticClassifier());
 				}
+			}finally{
+				LC.unlock();
 			}
 		}
 		return detectLanguageClassifier(text, LOGISITIC_CLASSIFIERS, true);

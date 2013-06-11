@@ -13,17 +13,16 @@ import java.util.List;
  */
 public abstract class DecisionTreeEntity<T extends Comparable<T>, K> {
 
-	protected List<? extends DecisionTreeExample<T, K>> allData;
-	protected int numPositives;
-	protected int numNegatives;
+	protected final List<? extends DecisionTreeExample<T, K>> allData;
+	protected final int numPositives;
+	protected final int numNegatives;
 	protected final K positiveLabel;
 
-	public DecisionTreeEntity(K positiveLable) {
+	public DecisionTreeEntity(K positiveLable, List<? extends DecisionTreeExample<T, K>> allData) {
 		this.positiveLabel = positiveLable;
-	}
-
-	public List<? extends DecisionTreeExample<T, K>> getAllData() {
-		return allData;
+		this.allData = allData;
+		this.numPositives = this.allData != null ? this.getNumberOfPositives(this.allData) : 0;
+		this.numNegatives = this.allData != null ? this.allData.size() - numPositives : 0;
 	}
 
 	/**

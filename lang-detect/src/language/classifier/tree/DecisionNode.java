@@ -15,13 +15,13 @@ import language.classifier.tree.DecisionTreeFeature.Range;
  */
 public class DecisionNode<T extends Comparable<T>, K> extends DecisionTreeEntity<T, K> {
 
-	protected DecisionTreeFeature<T>[] featureSet;
-	protected int level;
-	protected ArrayList<DecisionTreeEntity<T, K>> children;
-	protected String label;
-	protected DecisionTreeFeature<T> currentFeature;
-	protected Comparable<T> lowValue;
-	protected Comparable<T> highValue;
+	protected final DecisionTreeFeature<T>[] featureSet;
+	protected final  int level;
+	protected final ArrayList<DecisionTreeEntity<T, K>> children;
+	protected final String label;
+	protected final DecisionTreeFeature<T> currentFeature;
+	protected final Comparable<T> lowValue;
+	protected final Comparable<T> highValue;
 
 	// calculate at instantiation only once
 	private double entropyAtNode;
@@ -41,12 +41,9 @@ public class DecisionNode<T extends Comparable<T>, K> extends DecisionTreeEntity
 	 */
 	public DecisionNode(List<? extends DecisionTreeExample<T, K>> data, DecisionTreeFeature<T>[] featureSet, int level,
 			DecisionTreeFeature<T> currentFeature, Comparable<T> lowValue, Comparable<T> highValue, K positiveLabel) {
-		super(positiveLabel);
-		this.allData = data;
+		super(positiveLabel, data);
 		this.level = level;
 		this.featureSet = featureSet;
-		this.numPositives = this.getNumberOfPositives(this.allData);
-		this.numNegatives = this.allData.size() - this.numPositives;
 		this.entropyAtNode = this.getEntropyForData(this.allData);
 		this.children = new ArrayList<>();
 		this.label = lowValue + " <= " + currentFeature + " <" + highValue;

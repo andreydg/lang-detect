@@ -15,14 +15,8 @@ public class DecisionLeaf<T extends Comparable<T>, K> extends DecisionTreeEntity
 	protected final double confidenceLevel;
 
 	public DecisionLeaf(List<? extends DecisionTreeExample<T, K>> data, double confidenceLevel, K positiveLabel) {
-		super(positiveLabel);
-		this.allData = data;
+		super(positiveLabel, data);
 		this.confidenceLevel = confidenceLevel;
-		if (this.allData != null) {
-			this.numPositives = this.getNumberOfPositives(this.allData);
-			this.numNegatives = this.allData.size() - numPositives;
-		}
-
 	}
 
 	@Override

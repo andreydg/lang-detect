@@ -29,8 +29,8 @@ public class SlidingWindowBigramBoundaryDetector extends BigramBoundaryDetector 
 
 	private final int windowSize;
 
-	// maps window size to order lest of boundary preference for tie breakers
-	private static final Map<Integer, int[]> boundaryPreferenceOrder;
+	// maps window size to order list of boundary preference for tie breakers
+	private static final Map<Integer, int[]> PREFERENCE_ORDER;
 
 	static {
 		Map<Integer, int[]> temp = new HashMap<Integer, int[]>();
@@ -39,13 +39,13 @@ public class SlidingWindowBigramBoundaryDetector extends BigramBoundaryDetector 
 		temp.put(4, new int[] { 1, 2, 0 });
 		temp.put(5, new int[] { 2, 1, 3, 0 });
 		temp.put(6, new int[] { 2, 3, 1, 4, 0 });
-		boundaryPreferenceOrder = Collections.unmodifiableMap(temp);
+		PREFERENCE_ORDER = Collections.unmodifiableMap(temp);
 	}
 
 	public SlidingWindowBigramBoundaryDetector(ClassificationAlgorithm algorithmToUse,
 			NgramLanguageDetector detector, int windowSize) throws IOException {
 		super(algorithmToUse, detector);
-		int[] orderPreference = boundaryPreferenceOrder.get(windowSize);
+		int[] orderPreference = PREFERENCE_ORDER.get(windowSize);
 		assert orderPreference != null : "Unsupported window size";
 		this.windowSize = windowSize;
 	}
@@ -91,7 +91,7 @@ public class SlidingWindowBigramBoundaryDetector extends BigramBoundaryDetector 
 				// breaking point
 				int smallestCount = Integer.MAX_VALUE;
 				int smallestInd = Integer.MIN_VALUE;
-				for (int ind : boundaryPreferenceOrder.get(this.windowSize)) {
+				for (int ind : PREFERENCE_ORDER.get(this.windowSize)) {
 					boundaryCounts[ind] = getBigramCount(prevTokens[ind + 1] + " " + prevTokens[ind]);
 					isAllPostitive = isAllPostitive && (boundaryCounts[ind] > 0);
 					if (boundaryCounts[ind] < smallestCount) {

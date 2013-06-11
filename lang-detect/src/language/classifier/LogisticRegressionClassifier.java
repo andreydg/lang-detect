@@ -24,8 +24,8 @@ public class LogisticRegressionClassifier<K, Z extends ClassifierExample<Double,
 	private static double LEARNING_RATE = 10.0;
 	private static double SUM_UPDATES_THRESHOLD = 1.0;
 
-	private static boolean SHOW_ADDITIONAL_ITER_OUTPUT = true;
-	private static boolean COLLECT_ADDITIONAL_STATS = true;
+	private static boolean SHOW_ADDITIONAL_ITER_OUTPUT = false;
+	private static boolean COLLECT_ADDITIONAL_STATS = false;
 
 	private static String WEIGHT_DELIMETER = " ";
 

@@ -122,7 +122,7 @@ public class NgramLanguageDetector implements LanguageDetector {
 		this.languageNgramModels = Collections.unmodifiableMap(populateLanguageModels());
 	}
 	
-	protected static LanguageDetector getForTests(){
+	protected static NgramLanguageDetector getForTests(){
 		return new NgramLanguageDetector(new File(RELATIVE_DATA_PATH));
 	}
 

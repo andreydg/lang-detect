@@ -48,6 +48,7 @@ public class NgramLanguageDetector implements LanguageDetector {
 	private static final Random rnd = new Random(1);
 
 	// path constants
+	public static String RELATIVE_DATA_PATH = "../lang-detect/war/";
 	public static String BASE_MODEL_DIR = "languagemodels";
 	public static final String NGRAM_MODEL_DIR = "ngramModel";
 	public static final String TRAINING_TEST_DIR = "trainingAndTestSet";
@@ -98,7 +99,7 @@ public class NgramLanguageDetector implements LanguageDetector {
 		}
 		LOCALE_MAP = Collections.unmodifiableMap(tempMap);
 	}
-
+	
 	public NgramLanguageDetector(File basePath) {
 
 		// if you change this set you need to change set of enums for features
@@ -119,7 +120,10 @@ public class NgramLanguageDetector implements LanguageDetector {
 
 		// init all the models
 		this.languageNgramModels = Collections.unmodifiableMap(populateLanguageModels());
-
+	}
+	
+	protected static LanguageDetector getForTests(){
+		return new NgramLanguageDetector(new File(RELATIVE_DATA_PATH));
 	}
 
 	public final void logQuery(String q) {

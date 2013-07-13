@@ -27,12 +27,12 @@ public class MultiLangTest extends TestCase {
 				ClassificationAlgorithm.LINEAR_WEIGHTS, NgramLanguageDetector.getForTests(), 4);
 
 		StringBuilder sb = new StringBuilder();
-		sb.append(SingleLangTest.getEnglishString());
-		sb.append(SingleLangTest.getFrenchString());
-		sb.append(SingleLangTest.getItalianString());
-		sb.append(SingleLangTest.getGermanString());
-		sb.append(SingleLangTest.getSpanishString());
-		sb.append(SingleLangTest.getPortugueseString());
+		sb.append(DefaultSingleLangTest.getEnglishString());
+		sb.append(DefaultSingleLangTest.getFrenchString());
+		sb.append(DefaultSingleLangTest.getItalianString());
+		sb.append(DefaultSingleLangTest.getGermanString());
+		sb.append(DefaultSingleLangTest.getSpanishString());
+		sb.append(DefaultSingleLangTest.getPortugueseString());
 		List<Pair<String, Locale>> tags = boundaryDetector.tagStringWithLanguages(sb.toString());
 
 		assertEquals("Should have returned 6 phrases", 6, tags.size());
@@ -56,12 +56,12 @@ public class MultiLangTest extends TestCase {
 
 		StringBuilder sb = new StringBuilder(65536);
 		for (int ind = 0; ind < numRepetitions; ind++) {
-			sb.append(SingleLangTest.getEnglishString());
-			sb.append(SingleLangTest.getFrenchString());
-			sb.append(SingleLangTest.getItalianString());
-			sb.append(SingleLangTest.getGermanString());
-			sb.append(SingleLangTest.getSpanishString());
-			sb.append(SingleLangTest.getPortugueseString());
+			sb.append(DefaultSingleLangTest.getEnglishString());
+			sb.append(DefaultSingleLangTest.getFrenchString());
+			sb.append(DefaultSingleLangTest.getItalianString());
+			sb.append(DefaultSingleLangTest.getGermanString());
+			sb.append(DefaultSingleLangTest.getSpanishString());
+			sb.append(DefaultSingleLangTest.getPortugueseString());
 		}
 		List<Pair<String, Locale>> tags = boundaryDetector.tagStringWithLanguages(sb.toString());
 

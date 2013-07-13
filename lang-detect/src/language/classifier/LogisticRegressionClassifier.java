@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * Implements logistic regression classifier
@@ -14,6 +15,8 @@ import java.util.List;
  */
 public class LogisticRegressionClassifier<K, Z extends ClassifierExample<Double, K>> implements
 		Classifier<Double, K, Z> {
+	
+	private static final Logger log = Logger.getLogger(LogisticRegressionClassifier.class.getName());
 
 	private final int numFeatures;
 	private final List<Double> featureWeights;
@@ -91,7 +94,7 @@ public class LogisticRegressionClassifier<K, Z extends ClassifierExample<Double,
 
 			// additional classifier output
 			if (SHOW_ADDITIONAL_ITER_OUTPUT) {
-				System.out.println("iter:" + iteration + ", sumOfUdpates: " + sumOfUdpates + ", num mistakes: "
+				log.info("iter:" + iteration + ", sumOfUdpates: " + sumOfUdpates + ", num mistakes: "
 						+ numMistakes + ", positiveLabel :" + this.positiveLabel + ", iter time: "
 						+ (System.currentTimeMillis() - startTime) + "ms");
 			}
@@ -99,11 +102,11 @@ public class LogisticRegressionClassifier<K, Z extends ClassifierExample<Double,
 
 		if (COLLECT_ADDITIONAL_STATS) {
 			// print statistics for training
-			System.out.println("Overall classifier error rate on training data " + ((double) numMistakes)
+			log.info("Overall classifier error rate on training data " + ((double) numMistakes)
 					/ (this.numFeatures * trainingData.size()));
-			System.out.println("False positive classifier error rate on training data " + ((double) falsePositives)
+			log.info("False positive classifier error rate on training data " + ((double) falsePositives)
 					/ (this.numFeatures * trainingData.size()));
-			System.out.println("False negatives classifier error rate on training data " + ((double) falseNegatives)
+			log.info("False negatives classifier error rate on training data " + ((double) falseNegatives)
 					/ (this.numFeatures * trainingData.size()));
 		}
 		printWeights();

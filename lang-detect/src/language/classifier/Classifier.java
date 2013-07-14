@@ -1,6 +1,7 @@
 package language.classifier;
 
-import java.io.File;
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.util.List;
 
@@ -29,15 +30,15 @@ public interface Classifier<T extends Comparable<T>, K, Z extends ClassifierExam
 	double getConfidenceLevel(Z example);
 
 	/**
-	 * writes classifier to file
+	 * writes classifier to DataOutput
 	 */
-	void writeToFile(File file) throws IOException;
+	void write(DataOutput output) throws IOException;
 
 	/**
-	 * read classifier to file
+	 * read classifier to DataInput
 	 * 
-	 * @return whether classifier was initialized from file
+	 * @return whether classifier was initialized from DataInput
 	 */
-	boolean readFromFile(File file) throws IOException;
+	boolean read(DataInput input) throws IOException;
 
 }

@@ -24,7 +24,7 @@ public class MultiLangTest extends TestCase {
 	public void testMultiLangOrder() throws Exception {
 
 		LanguageBoundaryDetector boundaryDetector = new SlidingWindowBigramBoundaryDetector(
-				ClassificationAlgorithm.LINEAR_WEIGHTS, NgramLanguageDetector.getForTests(), 4);
+				ClassificationAlgorithm.LINEAR_WEIGHTS, NgramLanguageDetectorForTests.get(), 4);
 
 		StringBuilder sb = new StringBuilder();
 		sb.append(DefaultSingleLangTest.getEnglishString());
@@ -50,7 +50,7 @@ public class MultiLangTest extends TestCase {
 	public void testLargeMultiLangOrder() throws Exception {
 
 		LanguageBoundaryDetector boundaryDetector = new SlidingWindowBigramBoundaryDetector(
-				ClassificationAlgorithm.LINEAR_WEIGHTS, NgramLanguageDetector.getForTests(), 4);
+				ClassificationAlgorithm.LINEAR_WEIGHTS, NgramLanguageDetectorForTests.get(), 4);
 
 		final int numRepetitions = 100;
 

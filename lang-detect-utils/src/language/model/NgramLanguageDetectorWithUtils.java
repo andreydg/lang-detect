@@ -2,8 +2,11 @@ package language.model;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -16,6 +19,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
+import java.util.logging.Logger;
 
 import language.model.multiling.BigramBoundaryDetector;
 import language.model.multiling.LanguageBoundaryDetector;
@@ -36,6 +40,8 @@ import language.util.Pair;
  * @author Andrey Gusev
  */
 public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
+	
+	private static final Logger log = Logger.getLogger(NgramLanguageDetectorWithUtils.class.getName());
 
 	private static final Random rnd = new Random(1);
 
@@ -462,6 +468,21 @@ public class NgramLanguageDetectorWithUtils extends NgramLanguageDetector {
 		output.append("F1:").append(decimalFormat.format(2 * precision * recall / (precision + recall))).append("\n");
 
 		return output.toString();
+	}
+	
+	/**
+	 * Override to to write to file
+	 */
+	@Override
+	protected final DataOutputStream getLogisitcClassifierDataOutput(Locale locale) {
+
+		String location = getLogisticClassifierFileCache(locale);
+		try {
+			return new DataOutputStream(new FileOutputStream(location));
+		} catch (FileNotFoundException e) {
+			log.severe("Could not write classifier to: " + location);
+			return null;
+		}
 	}
 
 	private void incrementLocaleCounts(Locale locale, Map<Locale, Integer> map) {

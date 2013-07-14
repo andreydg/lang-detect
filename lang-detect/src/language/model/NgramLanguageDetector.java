@@ -1,8 +1,12 @@
 package language.model;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.DecimalFormat;
@@ -48,7 +52,6 @@ public class NgramLanguageDetector implements LanguageDetector {
 	private static final Random rnd = new Random(1);
 
 	// path constants
-	public static String RELATIVE_DATA_PATH = "../lang-detect/war/";
 	public static String BASE_MODEL_DIR = "languagemodels";
 	public static final String NGRAM_MODEL_DIR = "ngramModel";
 	public static final String TRAINING_TEST_DIR = "trainingAndTestSet";
@@ -125,10 +128,6 @@ public class NgramLanguageDetector implements LanguageDetector {
 
 		// init all the models
 		this.languageNgramModels = Collections.unmodifiableMap(populateLanguageModels());
-	}
-
-	protected static NgramLanguageDetector getForTests() {
-		return new NgramLanguageDetector(new File(RELATIVE_DATA_PATH));
 	}
 
 	public final void logQuery(String q) {
@@ -266,12 +265,12 @@ public class NgramLanguageDetector implements LanguageDetector {
 		for (Locale positiveLocale : LOCALES) {
 			log.info("Creating logistic regression classifier for: " + positiveLocale);
 			// just need one datum to establish dimensions
-			LanguageDocumentExample someExample = getTrainingExamples(false, 1).get(0);
+			LanguageDocumentExample someExample = getTrainingExamples(true, 1).get(0);
 			LogisticRegressionClassifier<Locale, LanguageDocumentExample> localeClassifier = new LogisticRegressionClassifier<>(
 					someExample.getFeatureValues(positiveLocale).size(), positiveLocale);
 
 			// submit to read or train classifier
-			completionService.submit(new LogisticClassifierTrainer(localeClassifier, getLogisitcClassifierFile(positiveLocale)));
+			completionService.submit(new LogisticClassifierTrainer(localeClassifier, positiveLocale));
 			numSubmitted++;
 			retVal.put(positiveLocale, localeClassifier);
 		}
@@ -293,18 +292,26 @@ public class NgramLanguageDetector implements LanguageDetector {
 			Callable<LogisticRegressionClassifier<Locale, LanguageDocumentExample>> {
 
 		private final LogisticRegressionClassifier<Locale, LanguageDocumentExample> localeClassifier;
-		private final File classifierFile;
 
+		private final Locale positiveLocale;
+		
 		public LogisticClassifierTrainer(
-				LogisticRegressionClassifier<Locale, LanguageDocumentExample> localeClassifier, File classifierFile) {
+				LogisticRegressionClassifier<Locale, LanguageDocumentExample> localeClassifier, Locale positiveLocale) {
 			this.localeClassifier = localeClassifier;
-			this.classifierFile = classifierFile;
+			this.positiveLocale = positiveLocale;
 		}
 
 		public LogisticRegressionClassifier<Locale, LanguageDocumentExample> call() throws IOException {
-			if (!localeClassifier.readFromFile(classifierFile)) {
-				localeClassifier.train(getCachedTrainingDataSet(false));
-				localeClassifier.writeToFile(classifierFile);
+
+			try (DataInputStream input = getLogisitcClassifierDataInput(positiveLocale)) {
+				// try reading from cache
+				if (input == null || !localeClassifier.read(input)) {
+					localeClassifier.train(getCachedTrainingDataSet(true));
+					// write new classifier
+					try (DataOutputStream output = getLogisitcClassifierDataOutput(positiveLocale)) {
+						localeClassifier.write(output);
+					}
+				}
 			}
 			return localeClassifier;
 		}
@@ -325,8 +332,7 @@ public class NgramLanguageDetector implements LanguageDetector {
 		return DATASET;
 	}
 
-	protected final File getLogisitcClassifierFile(Locale locale) {
-
+	protected String getLogisticClassifierFileCache(Locale locale) {
 		String configDir = basePath.getAbsolutePath();
 		String locationBase = configDir + File.separator + BASE_MODEL_DIR + File.separator;
 		String classifierDir = locationBase + LOGISTIC_CLASSFIER_DIR + File.separator;
@@ -335,8 +341,24 @@ public class NgramLanguageDetector implements LanguageDetector {
 			classifierDirFile.mkdir();
 		}
 
-		String logisiticClassifierLocaltion = classifierDir + locale.toString();
-		return new File(logisiticClassifierLocaltion);
+		return classifierDir + locale.toString();
+	}
+
+	protected DataInputStream getLogisitcClassifierDataInput(Locale locale) {
+
+		String location = getLogisticClassifierFileCache(locale);
+		try {
+			return new DataInputStream(new FileInputStream(location));
+		} catch (FileNotFoundException e) {
+			log.info("Could not load classifier from: " + location);
+			return null;
+		}
+	}
+
+	protected DataOutputStream getLogisitcClassifierDataOutput(Locale locale) {
+
+		// for now just write in memory
+		return new DataOutputStream(new ByteArrayOutputStream());
 	}
 
 	/*
@@ -537,8 +559,10 @@ public class NgramLanguageDetector implements LanguageDetector {
 		SortedSet<Entry<Locale, Double>> retVal = new TreeSet<>(new Comparator<Entry<Locale, Double>>() {
 
 			public int compare(Entry<Locale, Double> a, Entry<Locale, Double> b) {
-				// since since we want discening list multiply by -1
-				return a.getValue().compareTo(b.getValue()) * -1;
+				// since since we want reverse order list, we multiply by -1,
+				// fall back to lexicographic order of languages
+				int valCompare = a.getValue().compareTo(b.getValue()) * -1;
+				return valCompare != 0 ? valCompare : a.getKey().getLanguage().compareTo(b.getKey().getLanguage());
 			}
 
 		});

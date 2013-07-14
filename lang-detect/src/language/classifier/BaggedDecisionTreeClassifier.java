@@ -1,6 +1,7 @@
 package language.classifier;
 
-import java.io.File;
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -84,11 +85,11 @@ public class BaggedDecisionTreeClassifier<T extends Comparable<T>, K, Z extends 
 		return confidenceLevel;
 	}
 
-	public void writeToFile(File file) throws IOException {
+	public void write(DataOutput output) throws IOException {
 		throw new UnsupportedOperationException("Writing to file BaggedDecicsionTree classifier is not supported");
 	}
 
-	public boolean readFromFile(File file) throws IOException {
+	public boolean read(DataInput input) throws IOException {
 		throw new UnsupportedOperationException("Reading to file BaggedDecicsionTree classifier is not supported");
 	}
 }

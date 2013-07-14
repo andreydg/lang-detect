@@ -3,7 +3,7 @@ package language.model;
 import language.model.NgramLanguageDetector.ClassificationAlgorithm;
 
 /**
- * Single language test
+ * Single language test with default linear weight combination
  * 
  * @author Andrey Gusev
  * 

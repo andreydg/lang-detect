@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.SortedMap;
 import java.util.TreeMap;
 
 import language.classifier.tree.DecisionTreeEntity;
@@ -19,7 +20,7 @@ import language.classifier.tree.DecisionTreeFeature;
 public class LanguageDocumentExample implements DecisionTreeExample<Double, Locale> {
 
 	private final Locale exampleLocale;
-	private final Map<NgramLanguageModelFeature, Map<Locale, Double>> featureValues;
+	private final SortedMap<NgramLanguageModelFeature, Map<Locale, Double>> featureValues;
 
 	private volatile List<Double> allFeatureValues;
 

@@ -18,7 +18,7 @@ public abstract class BaseSingleLangTest extends TestCase {
 	
 	public BaseSingleLangTest(String name) {
 		super(name);
-		this.detector = NgramLanguageDetector.getForTests();
+		this.detector = NgramLanguageDetectorForTests.get();
 	}
 	
 	// basic check

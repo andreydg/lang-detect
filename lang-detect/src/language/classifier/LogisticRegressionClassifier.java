@@ -1,8 +1,7 @@
 package language.classifier;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,20 +14,17 @@ import java.util.logging.Logger;
  */
 public class LogisticRegressionClassifier<K, Z extends ClassifierExample<Double, K>> implements
 		Classifier<Double, K, Z> {
-	
+
 	private static final Logger log = Logger.getLogger(LogisticRegressionClassifier.class.getName());
 
 	private final int numFeatures;
 	private final List<Double> featureWeights;
 	private final K positiveLabel;
 
-	private static int MAX_ITER = 100;
+	private static int MAX_ITER = 20;
 	private static int MIN_ITER = 10;
 	private static double LEARNING_RATE = 10.0;
 	private static double SUM_UPDATES_THRESHOLD = 1.0;
-
-	private static boolean SHOW_ADDITIONAL_ITER_OUTPUT = false;
-	private static boolean COLLECT_ADDITIONAL_STATS = false;
 
 	private static String WEIGHT_DELIMETER = " ";
 
@@ -74,8 +70,7 @@ public class LogisticRegressionClassifier<K, Z extends ClassifierExample<Double,
 					double rawValue = this.getConfidenceLevel(trainingExample);
 					double errorMult = labelValue - rawValue;
 					// if this is error collect training data statistics
-					if (COLLECT_ADDITIONAL_STATS
-							&& trainingExample.isPositive(this.positiveLabel) != this.getClassOf(trainingExample)) {
+					if (trainingExample.isPositive(this.positiveLabel) != this.getClassOf(trainingExample)) {
 						numMistakes++;
 						if (trainingExample.isPositive(this.positiveLabel)) {
 							falseNegatives++;
@@ -93,52 +88,42 @@ public class LogisticRegressionClassifier<K, Z extends ClassifierExample<Double,
 			}
 
 			// additional classifier output
-			if (SHOW_ADDITIONAL_ITER_OUTPUT) {
-				log.info("iter:" + iteration + ", sumOfUdpates: " + sumOfUdpates + ", num mistakes: "
-						+ numMistakes + ", positiveLabel :" + this.positiveLabel + ", iter time: "
+			if (iteration % 1 == 0) {
+				log.info("iter:" + iteration + ", sumOfUdpates: " + sumOfUdpates + ", num mistakes: " + numMistakes
+						+ ", positiveLabel :" + this.positiveLabel + ", iter time: "
 						+ (System.currentTimeMillis() - startTime) + "ms");
 			}
 		}
 
-		if (COLLECT_ADDITIONAL_STATS) {
-			// print statistics for training
-			log.info("Overall classifier error rate on training data " + ((double) numMistakes)
-					/ (this.numFeatures * trainingData.size()));
-			log.info("False positive classifier error rate on training data " + ((double) falsePositives)
-					/ (this.numFeatures * trainingData.size()));
-			log.info("False negatives classifier error rate on training data " + ((double) falseNegatives)
-					/ (this.numFeatures * trainingData.size()));
-		}
+		// print statistics for training
+		log.info("Overall classifier error rate on training data " + ((double) numMistakes)
+				/ (this.numFeatures * trainingData.size()));
+		log.info("False positive classifier error rate on training data " + ((double) falsePositives)
+				/ (this.numFeatures * trainingData.size()));
+		log.info("False negatives classifier error rate on training data " + ((double) falseNegatives)
+				/ (this.numFeatures * trainingData.size()));
 		printWeights();
 	}
 
-	public void writeToFile(File file) throws IOException {
-		// TODO: use persistent storage rather than files
-		//
+	public void write(DataOutput output) throws IOException {
 
-		// BufferedWriter out = new BufferedWriter(new FileWriter(file));
-		// out.write(getWeightsAsString());
-		// out.close();
+		output.writeInt(numFeatures);
+		for (int ind = 0; ind < numFeatures; ind++) {
+			output.writeDouble(featureWeights.get(ind));
+		}
 	}
 
-	public boolean readFromFile(File file) throws IOException {
-		if (!file.exists()) {
+	public boolean read(DataInput input) throws IOException {
+
+		int numFeatures = input.readInt();
+		if (numFeatures != this.numFeatures) {
+			log.warning(" --- Classifier feature size mismatch, ignoring saved classifier --- ");
 			return false;
 		}
-
-		String s;
-		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-			while ((s = br.readLine()) != null) {
-				String[] weights = s.split(WEIGHT_DELIMETER);
-				if (weights.length != this.numFeatures) {
-					return false;
-				}
-				for (int ind = 0; ind < this.numFeatures; ind++) {
-					this.featureWeights.add(Double.valueOf(weights[ind]));
-				}
-
-			}
+		for (int ind = 0; ind < numFeatures; ind++) {
+			this.featureWeights.add(input.readDouble());
 		}
+
 		return true;
 	}
 
@@ -162,7 +147,7 @@ public class LogisticRegressionClassifier<K, Z extends ClassifierExample<Double,
 		sb.append(getWeightsAsString());
 		sb.append("]");
 
-		System.out.println(sb.toString());
+		log.info(sb.toString());
 	}
 
 	private String getWeightsAsString() {

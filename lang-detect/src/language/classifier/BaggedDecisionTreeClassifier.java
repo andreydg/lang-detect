@@ -50,7 +50,7 @@ public class BaggedDecisionTreeClassifier<T extends Comparable<T>, K, Z extends 
 			// add tree to list of bagged trees
 			this.decisionTrees.add(root);
 
-			log.info("Generating tree for " + positiveLabel + ", bag " + ind);
+			log.info("Generated tree for " + positiveLabel + ", bag " + (ind+1));
 		}
 
 	}
@@ -86,10 +86,10 @@ public class BaggedDecisionTreeClassifier<T extends Comparable<T>, K, Z extends 
 	}
 
 	public void write(DataOutput output) throws IOException {
-		throw new UnsupportedOperationException("Writing to file BaggedDecicsionTree classifier is not supported");
+		throw new UnsupportedOperationException("Writing out BaggedDecicsionTree classifier is not supported");
 	}
 
 	public boolean read(DataInput input) throws IOException {
-		throw new UnsupportedOperationException("Reading to file BaggedDecicsionTree classifier is not supported");
+		throw new UnsupportedOperationException("Reading in BaggedDecicsionTree classifier is not supported");
 	}
 }

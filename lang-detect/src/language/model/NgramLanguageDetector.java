@@ -179,13 +179,13 @@ public class NgramLanguageDetector implements LanguageDetector {
 	 */
 	protected final List<LanguageDocumentExample> getTrainingExamples(boolean addLinearWeightFeature)
 			throws IOException {
-		return getTrainingExamples(addLinearWeightFeature, -1);
+		return getTrainingExamples(addLinearWeightFeature, -1, 0f);
 	}
 
 	/*
 	 * Get first n of of training example to train classifier
 	 */
-	protected final List<LanguageDocumentExample> getTrainingExamples(boolean addLinearWeightFeature, int n)
+	protected final List<LanguageDocumentExample> getTrainingExamples(boolean addLinearWeightFeature, int n, float ratio)
 			throws IOException {
 
 		String locationBase = basePath.getAbsolutePath() + File.separator + BASE_MODEL_DIR + File.separator;
@@ -205,12 +205,23 @@ public class NgramLanguageDetector implements LanguageDetector {
 			String s;
 			try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), UTF8))) {
 				while ((s = br.readLine()) != null) {
-					LanguageDocumentExample trainingExample = getExample(s, addLinearWeightFeature, positiveLocale);
-					examples.add(trainingExample);
-					if (examples.size() % 10000 == 0) {
-						log.info("Loaded " + examples.size() + " examples");
+
+					// sample if necessary
+					boolean addExample = (ratio > 0 && rnd.nextFloat() < ratio) || ratio <= 0;
+					if (!addExample) {
+						continue;
 					}
-					if (n > -1 && examples.size() >= n) {
+					LanguageDocumentExample trainingExample = getExample(s, addLinearWeightFeature, positiveLocale);
+
+					
+					examples.add(trainingExample);
+					int size = examples.size();
+
+					if (size > 0 && size % 1000 == 0) {
+						log.info("Loaded " + size + " examples");
+					}
+
+					if (n > -1 && size >= n) {
 						break outer;
 					}
 				}
@@ -265,7 +276,7 @@ public class NgramLanguageDetector implements LanguageDetector {
 		for (Locale positiveLocale : LOCALES) {
 			log.info("Creating logistic regression classifier for: " + positiveLocale);
 			// just need one datum to establish dimensions
-			LanguageDocumentExample someExample = getTrainingExamples(true, 1).get(0);
+			LanguageDocumentExample someExample = getTrainingExamples(true, 1, 0).get(0);
 			LogisticRegressionClassifier<Locale, LanguageDocumentExample> localeClassifier = new LogisticRegressionClassifier<>(
 					someExample.getFeatureValues(positiveLocale).size(), positiveLocale);
 
@@ -367,7 +378,8 @@ public class NgramLanguageDetector implements LanguageDetector {
 	protected final Map<Locale, Classifier<Double, Locale, LanguageDocumentExample>> trainDecisionTree(int numBags)
 			throws IOException {
 
-		List<LanguageDocumentExample> examples = getTrainingExamples(true);
+		// reduce data set for faster training
+		List<LanguageDocumentExample> examples = getTrainingExamples(true, -1, getDatasetSampleRatio());
 
 		Map<Locale, Classifier<Double, Locale, LanguageDocumentExample>> retVal = new HashMap<>();
 
@@ -381,7 +393,11 @@ public class NgramLanguageDetector implements LanguageDetector {
 
 		return retVal;
 	}
-
+	
+	protected float getDatasetSampleRatio(){
+		return 1f;
+	}
+	
 	/**
 	 * 
 	 * @param text

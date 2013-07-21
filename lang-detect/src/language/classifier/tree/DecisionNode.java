@@ -16,7 +16,7 @@ import language.classifier.tree.DecisionTreeFeature.Range;
 public class DecisionNode<T extends Comparable<T>, K> extends DecisionTreeEntity<T, K> {
 
 	protected final DecisionTreeFeature<T>[] featureSet;
-	protected final  int level;
+	protected final int level;
 	protected final ArrayList<DecisionTreeEntity<T, K>> children;
 	protected final String label;
 	protected final DecisionTreeFeature<T> currentFeature;

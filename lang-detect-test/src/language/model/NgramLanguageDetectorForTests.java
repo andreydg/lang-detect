@@ -42,5 +42,13 @@ public class NgramLanguageDetectorForTests extends NgramLanguageDetector {
 			return null;
 		}
 	}
+	
+	/**
+	 * Sample to speed up test
+	 */
+	@Override
+	protected float getDatasetSampleRatio(){
+		return 0.01f;
+	}
 
 }

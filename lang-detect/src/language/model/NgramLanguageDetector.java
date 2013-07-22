@@ -207,13 +207,12 @@ public class NgramLanguageDetector implements LanguageDetector {
 				while ((s = br.readLine()) != null) {
 
 					// sample if necessary
-					boolean addExample = (ratio > 0 && rnd.nextFloat() < ratio) || ratio <= 0;
-					if (!addExample) {
+					if (!((ratio > 0f && rnd.nextFloat() < ratio) || ratio <= 0f)) {
 						continue;
 					}
+					
 					LanguageDocumentExample trainingExample = getExample(s, addLinearWeightFeature, positiveLocale);
 
-					
 					examples.add(trainingExample);
 					int size = examples.size();
 
@@ -264,8 +263,7 @@ public class NgramLanguageDetector implements LanguageDetector {
 		Map<Locale, Classifier<Double, Locale, LanguageDocumentExample>> retVal = new HashMap<>();
 
 		// since training takes a long time we want to train using multiple
-		// threads
-		// classifier itself can not be trained in multiple threads
+		// threads classifier itself can not be trained in multiple threads
 		final int numThreads = 2;
 		ExecutorService executor = Executors.newFixedThreadPool(numThreads);
 
